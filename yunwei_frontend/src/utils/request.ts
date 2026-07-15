@@ -37,7 +37,7 @@ request.interceptors.request.use(
 request.interceptors.response.use(
   (response: AxiosResponse) => {
     const res = response.data;
-    
+
     // 如果是二进制流等其他数据，直接返回
     if (response.config.responseType === 'blob') {
       return response;
@@ -58,7 +58,8 @@ request.interceptors.response.use(
       const status = error.response.status;
       switch (status) {
         case 400:
-          message = '请求参数错误';
+          // 优先显示后端返回的业务错误
+          message = error.response.data?.message || '请求参数错误';
           break;
         case 401:
           message = '未授权，请重新登录';

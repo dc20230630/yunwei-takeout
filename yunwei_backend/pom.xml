@@ -9,6 +9,20 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
+    <properties>
+        <java.version>17</java.version>
+        <swagger-annotations.version>2.2.28</swagger-annotations.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>io.swagger.core.v3</groupId>
+                <artifactId>swagger-annotations-jakarta</artifactId>
+                <version>${swagger-annotations.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <groupId>com.yunwei</groupId>
     <artifactId>yunwei_backend</artifactId>
@@ -23,8 +37,4 @@
         <module>yunwei-pojo</module>
         <module>yunwei-server</module>
     </modules>
-
-    <properties>
-        <java.version>17</java.version>
-    </properties>
 </project>

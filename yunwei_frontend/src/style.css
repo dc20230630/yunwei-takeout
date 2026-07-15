@@ -14,3 +14,8 @@ body {
 #app {
   height: 100%;
 }
+
+/* 弹框打开时，禁止后台主内容区域滚动 */
+.dish-dialog-overlay .el-overlay-dialog {
+  overflow: hidden !important;
+}

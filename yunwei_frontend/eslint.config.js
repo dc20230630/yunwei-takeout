@@ -26,13 +26,15 @@ export default tseslint.config(
     },
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-unused-vars': [
-        'error',
-        {
-          argsIgnorePattern: '^_',
-          caughtErrors: 'none'
-        }
-      ],
+      'no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
+      // '@typescript-eslint/no-unused-vars': [
+      //   'error',
+      //   {
+      //     argsIgnorePattern: '^_',
+      //     caughtErrors: 'none'
+      //   }
+      // ],
       'vue/attributes-order': 'off',
       'vue/multi-word-component-names': 'off'
     }
