@@ -10,6 +10,16 @@ export default defineConfig({
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
     }
+  },
+
+  server:{
+    proxy:{
+      '/api':{
+        target:'http://localhost:8080',//后端Spring Boot地址
+        changeOrigin:true,//代理时修改请求来源
+        rewrite:(path)=>path.replace(/^\/api/,''),//转发时去掉 /api
+      }
+    }
   }
 })
 

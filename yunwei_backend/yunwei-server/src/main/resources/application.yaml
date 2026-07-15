@@ -1,3 +1,39 @@
+server:
+  port: 8080
+
+
 spring:
   application:
     name: yunwei-server
+  datasource:
+    url: jdbc:mysql://localhost:3306/yunwei?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false
+    username: root
+    password: 1234
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.yunwei.pojo.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    # 开发环境打印 MyBatis 执行的 SQL、参数和执行结果
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+logging:
+  level:
+    org.springframework.transaction: TRACE
+    org.springframework.jdbc.datasource.DataSourceTransactionManager: DEBUG
+    org.springframework.jdbc.support.JdbcTransactionManager: DEBUG
+
+yunwei:
+  jwt:
+    secret: eXVud2VpLWp3dC1zZWNyZXQta2V5LXBsZWFzZS1jaGFuZ2UtaW4tcHJvZHVjdGlvbi0yMDI2
+    expire-hours: 2
+
+  oss:
+    endpoint: oss-cn-beijing.aliyuncs.com
+    bucket-name: dachou-yunwei
+    access-key-id: ${OSS_ACCESS_KEY_ID}
+    access-key-secret: ${OSS_ACCESS_KEY_SECRET}
+    region: cn-beijing
+

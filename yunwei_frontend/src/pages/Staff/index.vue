@@ -4,7 +4,7 @@
     <div class="flex justify-between items-baseline">
       <div>
         <h2 class="text-2xl font-bold text-gray-800">员工管理</h2>
-        <p class="text-gray-400 text-sm mt-1">管理员工账号与职位</p>
+        <p class="text-gray-400 text-sm mt-1">管理员工账号</p>
       </div>
       <el-button type="primary" @click="openAddDialog">+ 新增员工</el-button>
     </div>
@@ -13,23 +13,21 @@
     <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-5">
       <div class="flex justify-between items-center mb-4">
         <h3 class="font-bold text-gray-800">员工列表</h3>
-        <span class="text-xs text-gray-400">共 {{ staffList.length }} 个员工账号</span>
+        <span class="text-xs text-gray-400">共 {{ total }} 个员工账号</span>
       </div>
 
       <el-table :data="staffList" style="width: 100%" size="default">
-        <el-table-column prop="name" label="员工姓名" min-width="120" />
-        <el-table-column prop="username" label="账号" width="130" />
-        <el-table-column prop="phone" label="手机号" width="140" />
-        <el-table-column prop="role" label="职位" width="120">
+        <el-table-column prop="name" label="员工姓名" />
+        <el-table-column prop="username" label="账号" />
+        <el-table-column prop="phone" label="手机号" />
+        <el-table-column prop="sex" label="性别">
           <template #default="{ row }">
-            <el-tag :type="getRoleTagType(row.role)">
-              {{ row.role }}
-            </el-tag>
+            <span>{{ row.sex === '1' ? '男' : '女' }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="账号状态" width="110">
+        <el-table-column label="账号状态">
           <template #default="{ row }">
-            <el-switch 
+            <el-switch
               v-model="row.status"
               active-text="启用"
               inactive-text="停用"
@@ -38,29 +36,41 @@
             />
           </template>
         </el-table-column>
-        <el-table-column prop="time" label="创建时间" width="140" />
-        <el-table-column prop="last" label="最后登录" width="170" />
-        <el-table-column label="操作" width="100" fixed="right">
+        <el-table-column prop="createTime" label="创建时间" />
+        <el-table-column prop="updateTime" label="更新时间" />
+        <el-table-column label="操作" width="150" fixed="right">
           <template #default="{ row }">
-            <el-button link type="danger" size="small" @click="handleDelete(row.id)">删除</el-button>
+            <el-button link type="primary" size="small" @click="openEditDialog(row.id)">
+              编辑
+            </el-button>
+            <el-button link type="danger" size="small" @click="handleDelete(row.id)"
+              >删除</el-button
+            >
           </template>
         </el-table-column>
       </el-table>
+
+      <div class="mt-4 flex justify-end">
+        <el-pagination
+          v-model:current-page="currentPage"
+          v-model:page-size="pageSize"
+          :page-sizes="[5, 10, 20]"
+          :total="total"
+          layout="total, sizes, prev, pager, next, jumper"
+          @current-change="handleCurrentChange"
+          @size-change="handleSizeChange"
+        />
+      </div>
     </div>
 
     <!-- 新增员工对话框 -->
     <el-dialog
       v-model="dialogVisible"
-      title="新增员工"
+      :title="isEdit ? '编辑员工' : '新增员工'"
       width="500px"
       destroy-on-close
     >
-      <el-form 
-        ref="staffFormRef"
-        :model="staffForm"
-        :rules="staffRules"
-        label-position="top"
-      >
+      <el-form ref="staffFormRef" :model="staffForm" :rules="staffRules" label-position="top">
         <div class="grid grid-cols-2 gap-4">
           <el-form-item label="姓名" prop="name">
             <el-input v-model="staffForm.name" placeholder="请输入员工姓名" />
@@ -71,16 +81,19 @@
           <el-form-item label="手机号" prop="phone" class="col-span-2">
             <el-input v-model="staffForm.phone" placeholder="请输入11位手机号" />
           </el-form-item>
-          <el-form-item label="职位" prop="role">
-            <el-select v-model="staffForm.role" placeholder="选择职位" class="w-full">
-              <el-option label="店长" value="店长" />
-              <el-option label="前台主管" value="前台主管" />
-              <el-option label="主厨" value="主厨" />
-              <el-option label="配送员" value="配送员" />
+          <el-form-item v-if="!isEdit" label="初始密码" prop="password">
+            <el-input v-model="staffForm.password" type="password" show-password disabled />
+          </el-form-item>
+
+          <el-form-item label="性别" prop="sex">
+            <el-select v-model="staffForm.sex" placeholder="请选择性别" class="w-full">
+              <el-option label="男" value="1" />
+              <el-option label="女" value="2" />
             </el-select>
           </el-form-item>
-          <el-form-item label="初始密码" prop="password">
-            <el-input v-model="staffForm.password" type="password" show-password disabled />
+
+          <el-form-item label="身份证号" prop="idNumber" class="col-span-2">
+            <el-input v-model="staffForm.idNumber" placeholder="请输入身份证号" />
           </el-form-item>
         </div>
       </el-form>
@@ -95,57 +108,122 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue';
-import { ElMessage, ElMessageBox, type FormInstance } from 'element-plus';
+import { ref, reactive, onMounted } from 'vue'
+import { ElMessage, ElMessageBox, type FormInstance } from 'element-plus'
+import {
+  addEmployee,
+  getEmployeeList,
+  updateEmployeeStatus,
+  getEmployeeDetail,
+  updateEmployee,
+  deleteEmployee,
+  type EmployeeListItem
+} from '@/api/employee'
 
-// 模拟初始员工数据
-const staffList = ref([
-  { id: 'S101', name: '王晓东', username: 'wangxd', phone: '13566778899', role: '店长', status: true, time: '2026-01-01', last: '2026-07-08 08:30' },
-  { id: 'S102', name: '李丽华', username: 'lilh', phone: '13611223344', role: '前台主管', status: true, time: '2026-02-10', last: '2026-07-08 09:00' },
-  { id: 'S103', name: '张大厨', username: 'zhangdc', phone: '13755664422', role: '主厨', status: true, time: '2026-01-15', last: '2026-07-07 21:00' },
-  { id: 'S104', name: '赵小跑', username: 'zhaoxp', phone: '13900998877', role: '配送员', status: false, time: '2026-03-01', last: '2026-07-05 18:22' }
-]);
+// 当前页码
+const currentPage = ref(1)
 
-const getRoleTagType = (role: string) => {
-  const map: Record<string, string> = {
-    '店长': 'danger',
-    '前台主管': 'warning',
-    '主厨': 'primary',
-    '配送员': 'success'
-  };
-  return map[role] || 'info';
-};
+// 每页条数
+const pageSize = ref(10)
 
-const toggleStatus = (row: any) => {
-  ElMessage.success(`员工“${row.name}”的账户已成功${row.status ? '开启' : '关闭'}`);
-};
+// 员工总数
+const total = ref(0)
 
-const handleDelete = (id: string) => {
-  ElMessageBox.confirm(
-    '确认要删除该员工账号吗？此操作将立即注销其登录权限。',
-    '提示',
-    {
+interface StaffItem extends Omit<EmployeeListItem, 'status'> {
+  // Element Plus 开关需要布尔值
+  status: boolean
+}
+
+// 初始员工数据
+const staffList = ref<StaffItem[]>([])
+
+/**
+ * 查询员工列表。
+ */
+
+const loadEmployeeList = async () => {
+  const employeeList = await getEmployeeList(currentPage.value, pageSize.value)
+
+  //保存后端返回的总条数
+  total.value = employeeList.total
+
+  // 后端状态是 1/0，前端开关需要 true/false
+  staffList.value = employeeList.records.map((employee) => ({
+    ...employee,
+    status: employee.status === 1
+  }))
+}
+
+/**
+ * 切换页码后重新查询。
+ */
+const handleCurrentChange = (page: number) => {
+  currentPage.value = page
+  loadEmployeeList()
+}
+
+/**
+ * 修改每页条数后回到第一页重新查询。
+ */
+const handleSizeChange = (size: number) => {
+  pageSize.value = size
+  currentPage.value = 1
+  loadEmployeeList()
+}
+
+// 页面加载完成后查询员工
+onMounted(loadEmployeeList)
+
+/**
+ * 点击开关后，更新员工的启用或禁用状态。
+ */
+const toggleStatus = async (row: StaffItem) => {
+  const status = row.status ? 1 : 0
+
+  await updateEmployeeStatus(row.id, status)
+
+  ElMessage.success(`员工“${row.name}”的账户已成功${row.status ? '开启' : '关闭'}`)
+
+  await loadEmployeeList()
+}
+
+const handleDelete = async (id: number) => {
+  try {
+    // 点击“取消”或关闭弹窗时，confirm 会抛出取消结果
+    await ElMessageBox.confirm('确认要删除该员工账号吗？此操作不可恢复。', '提示', {
       confirmButtonText: '确定删除',
       cancelButtonText: '取消',
       type: 'warning'
-    }
-  ).then(() => {
-    staffList.value = staffList.value.filter(s => s.id !== id);
-    ElMessage.success('员工账号已删除');
-  }).catch(() => {});
-};
+    })
+  } catch {
+    // 用户主动取消删除，不调用后端接口
+    return
+  }
 
+  // 确认后才调用后端 DELETE 接口
+  await deleteEmployee(id)
+  
+  ElMessage.success('员工账号已删除')
+
+  await loadEmployeeList()
+}
+
+// true 表示当前弹窗用于编辑，false 表示新增
+const isEdit = ref(false)
 // 新增对话框
-const dialogVisible = ref(false);
-const staffFormRef = ref<FormInstance>();
+const dialogVisible = ref(false)
+const staffFormRef = ref<FormInstance>()
 
 const staffForm = reactive({
+  id: 0,
   name: '',
   username: '',
   phone: '',
+  sex: '1',
+  idNumber: '',
   role: '配送员',
   password: '默认密码: 123456'
-});
+})
 
 const staffRules = {
   name: [{ required: true, message: '请输入员工姓名', trigger: 'blur' }],
@@ -153,44 +231,78 @@ const staffRules = {
   phone: [
     { required: true, message: '请输入联系电话', trigger: 'blur' },
     { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号格式', trigger: 'blur' }
-  ]
-};
+  ],
+  sex: [{ required: true, message: '请选择性别', trigger: 'change' }],
+  idNumber: [{ required: true, message: '请输入身份证号', trigger: 'blur' }]
+}
 
 const openAddDialog = () => {
-  staffForm.name = '';
-  staffForm.username = '';
-  staffForm.phone = '';
-  staffForm.role = '配送员';
-  dialogVisible.value = true;
-};
+  // 新增模式不需要员工 ID
+  isEdit.value = false
+  staffForm.id = 0
+  staffForm.name = ''
+  staffForm.username = ''
+  staffForm.phone = ''
+  dialogVisible.value = true
+  staffForm.sex = '1'
+  staffForm.idNumber = ''
+}
 
-const getNowDateString = () => {
-  const d = new Date();
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-};
+/**
+ * 查询员工详情后，打开编辑弹窗。
+ */
+const openEditDialog = async (id: number) => {
+  // 切换为编辑模式
+  isEdit.value = true
+
+  // 身份证号不在列表数据中，需要按 ID 查询详情
+  const employee = await getEmployeeDetail(id)
+
+  // 将接口数据回显到表单
+  staffForm.id = employee.id
+  staffForm.name = employee.name
+  staffForm.username = employee.username
+  staffForm.phone = employee.phone
+  staffForm.sex = employee.sex
+  staffForm.idNumber = employee.idNumber
+
+  dialogVisible.value = true
+}
 
 const handleSave = async () => {
-  if (!staffFormRef.value) return;
-  await staffFormRef.value.validate((valid) => {
-    if (valid) {
-      const nextId = 'S' + (100 + staffList.value.length + 1);
-      staffList.value.push({
-        id: nextId,
-        name: staffForm.name,
-        username: staffForm.username,
-        phone: staffForm.phone,
-        role: staffForm.role,
-        status: true,
-        time: getNowDateString(),
-        last: '-'
-      });
-      ElMessage.success('新增员工成功');
-      dialogVisible.value = false;
-    }
-  });
-};
+  if (!staffFormRef.value) return
+
+  const valid = await staffFormRef.value.validate()
+  if (!valid) return
+
+  if (isEdit.value) {
+    //编辑时带员工Id，调用PUT
+    await updateEmployee({
+      id: staffForm.id,
+      name: staffForm.name,
+      username: staffForm.username,
+      phone: staffForm.phone,
+      sex: staffForm.sex,
+      idNumber: staffForm.idNumber
+    })
+    ElMessage.success('员工信息修改成功')
+  } else {
+    await addEmployee({
+      username: staffForm.username,
+      name: staffForm.name,
+      phone: staffForm.phone,
+      sex: staffForm.sex,
+      idNumber: staffForm.idNumber
+    })
+
+    ElMessage.success('新增员工成功')
+  }
+
+  dialogVisible.value = false
+
+  // 重新查询列表，让新员工显示出来
+  await loadEmployeeList()
+}
 </script>
 
-<style scoped>
-</style>
+<style scoped></style>

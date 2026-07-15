@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yunwei.mapper.DishMapper">
+    <!-- 新增菜品 -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO dish (
+        name,
+        category_id,
+        price,
+        image,
+        description,
+        status,
+        create_time,
+        update_time,
+        create_user,
+        update_user
+        )
+        VALUES (
+        #{name},
+        #{categoryId},
+        #{price},
+        #{image},
+        #{description},
+        #{status},
+        #{createTime},
+        #{updateTime},
+        #{createUser},
+        #{updateUser}
+        )
+    </insert>
+
+    <!-- 只更新可编辑字段，不改变菜品售卖状态 -->
+    <update id="update">
+        UPDATE dish
+        SET
+        name = #{name},
+        category_id = #{categoryId},
+        price = #{price},
+        image = #{image},
+        description = #{description},
+        update_time = #{updateTime},
+        update_user = #{updateUser}
+        WHERE id = #{id}
+    </update>
+
+    <!-- 只修改售卖状态，更新时间和操作人由自动填充处理 -->
+    <update id="updateStatus">
+        UPDATE dish
+        SET
+            status = #{status},
+            update_time = #{updateTime},
+            update_user = #{updateUser}
+        WHERE id = #{id}
+    </update>
+
+
+    <!-- 批量删除菜品本身 -->
+    <delete id="deleteByIds">
+        DELETE FROM dish
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <!-- 根据名称查询菜品，用于避免重复新增 -->
+    <select id="selectByName" resultType="com.yunwei.pojo.entity.Dish">
+        SELECT id
+        FROM dish
+        WHERE name = #{name}
+    </select>
+
+    <!-- 分页查询菜品列表 -->
+    <select id="pageQuery" resultType="com.yunwei.pojo.vo.DishVo">
+        SELECT
+        d.id,
+        d.name,
+        d.category_id AS categoryId,
+        c.name AS categoryName,
+        d.price,
+        d.image,
+        d.description,
+        d.status,
+        d.update_time AS updateTime
+        FROM dish d
+        INNER JOIN category c ON d.category_id = c.id
+
+        <where>
+            <!-- 名称不为空时，按名称模糊查询 -->
+            <if test="name != null and name != ''">
+                AND d.name LIKE CONCAT('%', #{name}, '%')
+            </if>
+
+            <!-- 分类不为空时，筛选指定分类 -->
+            <if test="categoryId != null">
+                AND d.category_id = #{categoryId}
+            </if>
+        </where>
+
+        <!-- 最近修改的菜品排在前面 -->
+        ORDER BY d.update_time DESC
+    </select>
+
+
+    <!-- 查询待删除菜品中，状态为起售的数量 -->
+    <select id="countByIdsAndStatus" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM dish
+        WHERE status = #{status}
+        AND id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+    <!-- 查询编辑弹框需要的菜品基本信息 -->
+    <select id="selectById" resultType="com.yunwei.pojo.entity.Dish">
+        SELECT
+            id,
+            name,
+            category_id AS categoryId,
+            price,
+            image,
+            description,
+            status,
+            create_time AS createTime,
+            update_time AS updateTime,
+            create_user AS createUser,
+            update_user AS updateUser
+        FROM dish
+        WHERE id = #{id}
+    </select>
+</mapper>

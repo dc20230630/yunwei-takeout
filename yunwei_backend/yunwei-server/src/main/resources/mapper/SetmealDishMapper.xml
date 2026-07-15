@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yunwei.mapper.SetmealDishMapper">
+
+    <!-- 被套餐关联的菜品不能删除 -->
+    <select id="countByDishIds" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM setmeal_dish
+        WHERE dish_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+</mapper>

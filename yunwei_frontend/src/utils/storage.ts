@@ -9,10 +9,13 @@ export const storage = {
   /**
    * 设置本地存储
    */
-  set(key: string, value: any, expire: number | null = null): void {
+  set(key: string, value: any, expiresInSeconds: number | null = null): void {
     const data = {
       value,
-      expire: expire ? new Date().getTime() + expire * 1000 : null,
+      // 将后端传来的秒数转换为具体的失效时间戳
+      expire: expiresInSeconds
+        ? new Date().getTime() + expiresInSeconds * 1000
+        : null,
     };
     localStorage.setItem(PREFIX + key, JSON.stringify(data));
   },
@@ -27,7 +30,8 @@ export const storage = {
     try {
       const data = JSON.parse(raw);
       if (data.expire && new Date().getTime() > data.expire) {
-        this.remove(PREFIX + key);
+        // remove 方法内部会自动拼接 PREFIX，这里只传原始 key
+        this.remove(key);
         return null;
       }
       return data.value as T;
