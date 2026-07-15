@@ -13,14 +13,14 @@ export const useUserStore = defineStore('user', () => {
   const token = ref<string | null>(storage.get<string>('token'));
   const userInfo = ref<UserInfo | null>(storage.get<UserInfo>('userInfo'));
 
-  const setToken = (newToken: string) => {
+  const setToken = (newToken: string, expiresIn: number) => {
     token.value = newToken;
-    storage.set('token', newToken);
+    storage.set('token', newToken, expiresIn);
   };
 
-  const setUserInfo = (info: UserInfo) => {
+  const setUserInfo = (info: UserInfo, expiresIn: number) => {
     userInfo.value = info;
-    storage.set('userInfo', info);
+    storage.set('userInfo', info, expiresIn);
   };
 
   const logout = () => {
