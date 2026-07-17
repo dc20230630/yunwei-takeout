@@ -40,12 +40,7 @@
         <el-table-column prop="updateTime" label="更新时间" />
         <el-table-column label="操作" width="150" fixed="right">
           <template #default="{ row }">
-            <el-button link type="primary" size="small" @click="openEditDialog(row.id)">
-              编辑
-            </el-button>
-            <el-button link type="danger" size="small" @click="handleDelete(row.id)"
-              >删除</el-button
-            >
+            <el-button link type="danger" size="small" @click="handleDelete(row.id)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -66,11 +61,16 @@
     <!-- 新增员工对话框 -->
     <el-dialog
       v-model="dialogVisible"
-      :title="isEdit ? '编辑员工' : '新增员工'"
+      title="新增员工"
       width="500px"
       destroy-on-close
     >
-      <el-form ref="staffFormRef" :model="staffForm" :rules="staffRules" label-position="top">
+      <el-form 
+        ref="staffFormRef"
+        :model="staffForm"
+        :rules="staffRules"
+        label-position="top"
+      >
         <div class="grid grid-cols-2 gap-4">
           <el-form-item label="姓名" prop="name">
             <el-input v-model="staffForm.name" placeholder="请输入员工姓名" />
@@ -81,7 +81,15 @@
           <el-form-item label="手机号" prop="phone" class="col-span-2">
             <el-input v-model="staffForm.phone" placeholder="请输入11位手机号" />
           </el-form-item>
-          <el-form-item v-if="!isEdit" label="初始密码" prop="password">
+          <el-form-item label="职位" prop="role">
+            <el-select v-model="staffForm.role" placeholder="选择职位" class="w-full">
+              <el-option label="店长" value="店长" />
+              <el-option label="前台主管" value="前台主管" />
+              <el-option label="主厨" value="主厨" />
+              <el-option label="配送员" value="配送员" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="初始密码" prop="password">
             <el-input v-model="staffForm.password" type="password" show-password disabled />
           </el-form-item>
 
@@ -108,108 +116,46 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
-import { ElMessage, ElMessageBox, type FormInstance } from 'element-plus'
-import {
-  addEmployee,
-  getEmployeeList,
-  updateEmployeeStatus,
-  getEmployeeDetail,
-  updateEmployee,
-  deleteEmployee,
-  type EmployeeListItem
-} from '@/api/employee'
+import { ref, reactive } from 'vue';
+import { ElMessage, ElMessageBox, type FormInstance } from 'element-plus';
 
-// 当前页码
-const currentPage = ref(1)
+// 模拟初始员工数据
+const staffList = ref([
+  { id: 'S101', name: '王晓东', username: 'wangxd', phone: '13566778899', role: '店长', status: true, time: '2026-01-01', last: '2026-07-08 08:30' },
+  { id: 'S102', name: '李丽华', username: 'lilh', phone: '13611223344', role: '前台主管', status: true, time: '2026-02-10', last: '2026-07-08 09:00' },
+  { id: 'S103', name: '张大厨', username: 'zhangdc', phone: '13755664422', role: '主厨', status: true, time: '2026-01-15', last: '2026-07-07 21:00' },
+  { id: 'S104', name: '赵小跑', username: 'zhaoxp', phone: '13900998877', role: '配送员', status: false, time: '2026-03-01', last: '2026-07-05 18:22' }
+]);
 
-// 每页条数
-const pageSize = ref(10)
+const getRoleTagType = (role: string) => {
+  const map: Record<string, string> = {
+    '店长': 'danger',
+    '前台主管': 'warning',
+    '主厨': 'primary',
+    '配送员': 'success'
+  };
+  return map[role] || 'info';
+};
 
-// 员工总数
-const total = ref(0)
+const toggleStatus = (row: any) => {
+  ElMessage.success(`员工“${row.name}”的账户已成功${row.status ? '开启' : '关闭'}`);
+};
 
-interface StaffItem extends Omit<EmployeeListItem, 'status'> {
-  // Element Plus 开关需要布尔值
-  status: boolean
-}
-
-// 初始员工数据
-const staffList = ref<StaffItem[]>([])
-
-/**
- * 查询员工列表。
- */
-
-const loadEmployeeList = async () => {
-  const employeeList = await getEmployeeList(currentPage.value, pageSize.value)
-
-  //保存后端返回的总条数
-  total.value = employeeList.total
-
-  // 后端状态是 1/0，前端开关需要 true/false
-  staffList.value = employeeList.records.map((employee) => ({
-    ...employee,
-    status: employee.status === 1
-  }))
-}
-
-/**
- * 切换页码后重新查询。
- */
-const handleCurrentChange = (page: number) => {
-  currentPage.value = page
-  loadEmployeeList()
-}
-
-/**
- * 修改每页条数后回到第一页重新查询。
- */
-const handleSizeChange = (size: number) => {
-  pageSize.value = size
-  currentPage.value = 1
-  loadEmployeeList()
-}
-
-// 页面加载完成后查询员工
-onMounted(loadEmployeeList)
-
-/**
- * 点击开关后，更新员工的启用或禁用状态。
- */
-const toggleStatus = async (row: StaffItem) => {
-  const status = row.status ? 1 : 0
-
-  await updateEmployeeStatus(row.id, status)
-
-  ElMessage.success(`员工“${row.name}”的账户已成功${row.status ? '开启' : '关闭'}`)
-
-  await loadEmployeeList()
-}
-
-const handleDelete = async (id: number) => {
-  try {
-    // 点击“取消”或关闭弹窗时，confirm 会抛出取消结果
-    await ElMessageBox.confirm('确认要删除该员工账号吗？此操作不可恢复。', '提示', {
+const handleDelete = (id: string) => {
+  ElMessageBox.confirm(
+    '确认要删除该员工账号吗？此操作将立即注销其登录权限。',
+    '提示',
+    {
       confirmButtonText: '确定删除',
       cancelButtonText: '取消',
       type: 'warning'
-    })
-  } catch {
-    // 用户主动取消删除，不调用后端接口
-    return
-  }
+    }
+  ).then(() => {
+    staffList.value = staffList.value.filter(s => s.id !== id);
+    ElMessage.success('员工账号已删除');
+  }).catch(() => {});
+};
 
-  // 确认后才调用后端 DELETE 接口
-  await deleteEmployee(id)
-  
-  ElMessage.success('员工账号已删除')
-
-  await loadEmployeeList()
-}
-
-// true 表示当前弹窗用于编辑，false 表示新增
-const isEdit = ref(false)
 // 新增对话框
 const dialogVisible = ref(false)
 const staffFormRef = ref<FormInstance>()
@@ -237,72 +183,39 @@ const staffRules = {
 }
 
 const openAddDialog = () => {
-  // 新增模式不需要员工 ID
-  isEdit.value = false
-  staffForm.id = 0
-  staffForm.name = ''
-  staffForm.username = ''
-  staffForm.phone = ''
-  dialogVisible.value = true
-  staffForm.sex = '1'
-  staffForm.idNumber = ''
-}
+  staffForm.name = '';
+  staffForm.username = '';
+  staffForm.phone = '';
+  staffForm.role = '配送员';
+  dialogVisible.value = true;
+};
 
-/**
- * 查询员工详情后，打开编辑弹窗。
- */
-const openEditDialog = async (id: number) => {
-  // 切换为编辑模式
-  isEdit.value = true
-
-  // 身份证号不在列表数据中，需要按 ID 查询详情
-  const employee = await getEmployeeDetail(id)
-
-  // 将接口数据回显到表单
-  staffForm.id = employee.id
-  staffForm.name = employee.name
-  staffForm.username = employee.username
-  staffForm.phone = employee.phone
-  staffForm.sex = employee.sex
-  staffForm.idNumber = employee.idNumber
-
-  dialogVisible.value = true
-}
+const getNowDateString = () => {
+  const d = new Date();
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+};
 
 const handleSave = async () => {
-  if (!staffFormRef.value) return
-
-  const valid = await staffFormRef.value.validate()
-  if (!valid) return
-
-  if (isEdit.value) {
-    //编辑时带员工Id，调用PUT
-    await updateEmployee({
-      id: staffForm.id,
-      name: staffForm.name,
-      username: staffForm.username,
-      phone: staffForm.phone,
-      sex: staffForm.sex,
-      idNumber: staffForm.idNumber
-    })
-    ElMessage.success('员工信息修改成功')
-  } else {
-    await addEmployee({
-      username: staffForm.username,
-      name: staffForm.name,
-      phone: staffForm.phone,
-      sex: staffForm.sex,
-      idNumber: staffForm.idNumber
-    })
-
-    ElMessage.success('新增员工成功')
-  }
-
-  dialogVisible.value = false
-
-  // 重新查询列表，让新员工显示出来
-  await loadEmployeeList()
-}
+  if (!staffFormRef.value) return;
+  await staffFormRef.value.validate((valid) => {
+    if (valid) {
+      const nextId = 'S' + (100 + staffList.value.length + 1);
+      staffList.value.push({
+        id: nextId,
+        name: staffForm.name,
+        username: staffForm.username,
+        phone: staffForm.phone,
+        role: staffForm.role,
+        status: true,
+        time: getNowDateString(),
+        last: '-'
+      });
+      ElMessage.success('新增员工成功');
+      dialogVisible.value = false;
+    }
+  });
+};
 </script>
 
 <style scoped></style>
