@@ -95,6 +95,17 @@
           <el-form-item label="身份证号" prop="idNumber" class="col-span-2">
             <el-input v-model="staffForm.idNumber" placeholder="请输入身份证号" />
           </el-form-item>
+
+          <el-form-item label="性别" prop="sex">
+            <el-select v-model="staffForm.sex" placeholder="请选择性别" class="w-full">
+              <el-option label="男" value="1" />
+              <el-option label="女" value="2" />
+            </el-select>
+          </el-form-item>
+
+          <el-form-item label="身份证号" prop="idNumber" class="col-span-2">
+            <el-input v-model="staffForm.idNumber" placeholder="请输入身份证号" />
+          </el-form-item>
         </div>
       </el-form>
       <template #footer>
