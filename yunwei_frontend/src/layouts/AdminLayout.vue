@@ -83,8 +83,15 @@
         <strong>望京 SOHO 店</strong>
         <div>门店编号：YW-1001</div>
         <div class="flex items-center gap-1.5 mt-1">
-          <span class="w-2 h-2 rounded-full bg-green-500 animate-ping"></span>
-          <span class="text-green-400">今日营业中</span>
+          <span
+            :class="[
+              'w-2 h-2 rounded-full',
+              appStore.shopStatus === 1 ? 'bg-green-500 animate-ping' : 'bg-red-400'
+            ]"
+          ></span>
+          <span :class="appStore.shopStatus === 1 ? 'text-green-400' : 'text-red-300'">
+            {{ appStore.shopStatus === 1 ? '今日营业中' : '今日已打烊' }}
+          </span>
         </div>
       </div>
     </el-aside>
@@ -154,10 +161,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAppStore } from '@/store/app'
 import { useUserStore } from '@/store/user'
+import { getShopStatus } from '@/api/shop'
 import {
   Monitor,
   Document,
@@ -177,6 +185,12 @@ const route = useRoute()
 const router = useRouter()
 const appStore = useAppStore()
 const userStore = useUserStore()
+
+const loadShopStatus = async () => {
+  appStore.setShopStatus(await getShopStatus())
+}
+
+onMounted(loadShopStatus)
 
 const currentRouteTitle = computed(() => {
   return route.meta?.title || '详情'

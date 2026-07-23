@@ -132,4 +132,29 @@
         FROM dish
         WHERE id = #{id}
     </select>
+
+    <!-- 用户端按分类浏览起售菜品 -->
+    <select id="list" resultType="com.yunwei.pojo.entity.Dish">
+        SELECT id,
+               name,
+               category_id AS categoryId,
+               price,
+               image,
+               description,
+               status,
+               create_time AS createTime,
+               update_time AS updateTime,
+               create_user AS createUser,
+               update_user AS updateUser
+        FROM dish
+        <where>
+            <if test="categoryId != null">
+                AND category_id = #{categoryId}
+            </if>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+        </where>
+        ORDER BY update_time DESC
+    </select>
 </mapper>

@@ -1,0 +1,168 @@
+<!-- pages/menu/menu.wxml -->
+<!-- 自定义顶部栏带返回 -->
+<view class="custom-navbar" style="padding-top: {{statusBarHeight}}px; height: {{navBarHeight}}px; background: rgba(18, 21, 25, 0.96); border-bottom: none;">
+  <view class="custom-navbar-back" bindtap="goBack">
+    <view class="custom-navbar-back-icon" style="border-left-color: #ffffff; border-bottom-color: #ffffff;"></view>
+  </view>
+  <view class="custom-navbar-title" style="color: #ffffff;">云味甄选（科技园店）</view>
+</view>
+<view style="height: {{totalNavHeight}}px;"></view>
+
+<!-- 门店头部背景与公告 -->
+<view class="shop-header-wrap">
+  <view class="shop-header">
+    <image class="shop-logo" src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=140&q=80" mode="aspectFill" />
+    <view class="shop-info">
+      <view class="shop-name">云味甄选（科技园店）</view>
+      <view class="shop-meta">★ 4.9　|　月售 5000+　|　配送约 30 分钟</view>
+      <view class="shop-notice">公告：新鲜食材，用心烹饪，满30减5，欢迎品尝！</view>
+    </view>
+  </view>
+</view>
+
+<!-- 主点餐区分栏布局 -->
+<view class="menu-layout">
+  <!-- 左侧分类栏 -->
+  <scroll-view scroll-y class="menu-cats hide-scroll" style="height: calc(100vh - {{totalNavHeight + 172/2}}px - 140rpx);">
+    <view 
+      class="menu-cat {{activeCategory === item.name ? 'active' : ''}}" 
+      wx:for="{{categories}}" 
+      wx:key="id"
+      bindtap="switchCategory" 
+      data-name="{{item.name}}"
+    >
+      {{item.name}}
+    </view>
+  </scroll-view>
+
+  <!-- 右侧菜品栏 -->
+  <scroll-view scroll-y class="menu-list hide-scroll" style="height: calc(100vh - {{totalNavHeight + 172/2}}px - 140rpx);">
+    <view class="menu-category-title">{{activeCategory}}</view>
+    
+    <view class="food-row" wx:for="{{filteredFoods}}" wx:key="id" bindtap="goToFoodDetail" data-id="{{item.id}}">
+      <image src="{{item.image}}" mode="aspectFill" class="food-img" />
+      <view class="food-info">
+        <view class="food-name">{{item.name}}</view>
+        <view class="food-desc line-clamp-1">{{item.desc}}</view>
+        <view class="food-foot">
+          <view class="food-price">
+            <text class="food-price-num">{{item.price}}</text>
+          </view>
+          
+          <!-- 加减购物车控制器 -->
+          <view class="qty-controller" catchtap="preventBubble">
+            <!-- 带有规格 -->
+            <view class="spec-select-btn" wx:if="{{item.hasSpecs}}" bindtap="openSpecs" data-food="{{item}}">
+              选规格
+              <view class="spec-badge" wx:if="{{foodCartCounts[item.id] > 0}}">{{foodCartCounts[item.id]}}</view>
+            </view>
+            
+            <!-- 无规格直接加减 -->
+            <view class="stepper-wrap" wx:else>
+              <view class="minus-btn" wx:if="{{foodCartCounts[item.id] > 0}}" bindtap="decreaseQtyDirect" data-food="{{item}}">-</view>
+              <text class="stepper-count" wx:if="{{foodCartCounts[item.id] > 0}}">{{foodCartCounts[item.id]}}</text>
+              <view class="plus-btn" bindtap="increaseQtyDirect" data-food="{{item}}">+</view>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </scroll-view>
+</view>
+
+<!-- 底部购物车结算条 -->
+<view class="cart-bar-wrap" style="bottom: 0px;">
+  <view class="cart-bar" bindtap="toggleCartDrawer">
+    <view class="cart-circle-wrap">
+      <view class="cart-circle {{cartCount > 0 ? 'has-items' : ''}}">
+        <text class="cart-icon">🛒</text>
+        <view class="cart-badge" wx:if="{{cartCount > 0}}">{{cartCount}}</view>
+      </view>
+    </view>
+    <view class="cart-price-info">
+      <block wx:if="{{cartCount > 0}}">
+        <view class="cart-total-price">¥{{cartTotal}}</view>
+        <view class="cart-delivery-tip">另需配送费 ¥2</view>
+      </block>
+      <block wx:else>
+        <text class="cart-empty-text">未选购商品</text>
+      </block>
+    </view>
+    <view class="checkout-btn-wrap" catchtap="preventBubble">
+      <button 
+        class="checkout-btn {{cartTotal >= minCheckoutAmount ? 'active' : ''}}" 
+        disabled="{{cartTotal < minCheckoutAmount}}"
+        bindtap="goToCheckout"
+      >
+        {{cartTotal >= minCheckoutAmount ? '去结算' : '¥' + minCheckoutAmount + '起送'}}
+      </button>
+    </view>
+  </view>
+</view>
+
+<!-- 购物车抽屉 Drawer -->
+<view class="drawer-mask" wx:if="{{showCartDrawer}}" bindtap="toggleCartDrawer">
+  <view class="drawer-sheet card" catchtap="preventBubble">
+    <view class="drawer-head">
+      <text class="drawer-title">已选商品</text>
+      <view class="clear-btn" bindtap="clearAllCart">
+        <text class="trash-icon">🗑️</text> 清空购物车
+      </view>
+    </view>
+    <scroll-view scroll-y class="drawer-list hide-scroll">
+      <view class="drawer-row" wx:for="{{cart}}" wx:key="cartId">
+        <view class="drawer-food-info">
+          <view class="drawer-food-name">{{item.name}}</view>
+          <view class="drawer-food-specs" wx:if="{{item.specs}}">
+            {{item.specs.size}} / {{item.specs.spice}}
+          </view>
+        </view>
+        <view class="drawer-food-price">¥{{item.price * item.qty}}</view>
+        <view class="drawer-stepper">
+          <view class="drawer-minus" bindtap="decreaseCartQty" data-cartid="{{item.cartId}}">-</view>
+          <text class="drawer-qty-num">{{item.qty}}</text>
+          <view class="drawer-plus" bindtap="increaseCartQty" data-cartid="{{item.cartId}}">+</view>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+</view>
+
+<!-- 多规格选择弹窗 Dialog -->
+<view class="dialog-mask" wx:if="{{showSpecsDialog}}" bindtap="closeSpecs">
+  <view class="dialog-sheet card" catchtap="preventBubble">
+    <view class="dialog-close" bindtap="closeSpecs">×</view>
+    <view class="spec-food-head">
+      <image src="{{specFood.image}}" mode="aspectFill" class="spec-food-img" />
+      <view class="spec-food-info">
+        <view class="spec-food-name">{{specFood.name}}</view>
+        <view class="spec-food-price">
+          <text class="spec-price-val">{{specFood.price}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 后端返回的菜品口味 -->
+    <view class="spec-groups">
+      <view class="spec-group" wx:for="{{flavorGroups}}" wx:key="name" wx:for-item="group">
+        <view class="spec-group-title">{{group.name}}</view>
+        <view class="spec-options">
+          <view 
+            class="spec-option {{option.selected ? 'active' : ''}}"
+            wx:for="{{group.options}}"
+            wx:for-item="option"
+            wx:key="value"
+            bindtap="selectFlavor"
+            data-name="{{group.name}}"
+            data-value="{{option.value}}"
+          >
+            {{option.value}}
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 加入按钮 -->
+    <button class="primary-btn dialog-submit" bindtap="addSpecFoodToCart">加入购物车</button>
+  </view>
+</view>

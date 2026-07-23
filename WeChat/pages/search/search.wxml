@@ -1,0 +1,102 @@
+<!-- pages/search/search.wxml -->
+<!-- 自定义顶部栏带返回 -->
+<view class="custom-navbar" style="padding-top: {{statusBarHeight}}px; height: {{navBarHeight}}px;">
+  <view class="custom-navbar-back" bindtap="goBack">
+    <view class="custom-navbar-back-icon"></view>
+  </view>
+  <view class="custom-navbar-title">搜索</view>
+</view>
+<view style="height: {{totalNavHeight}}px;"></view>
+
+<view class="search-container">
+  <!-- 搜索输入框行 -->
+  <view class="search-top-bar">
+    <view class="search-input-wrap">
+      <icon type="search" size="16" class="inner-search-icon"></icon>
+      <input 
+        type="text" 
+        confirm-type="search"
+        placeholder="搜索菜品、套餐" 
+        value="{{keyword}}"
+        bindinput="onInput"
+        bindconfirm="onSearchConfirm"
+        focus="{{true}}"
+        class="inner-input"
+      />
+      <icon type="clear" size="16" wx:if="{{keyword}}" bindtap="clearInput" class="clear-icon"></icon>
+    </view>
+    <view class="cancel-text" bindtap="goBack">取消</view>
+  </view>
+
+  <scroll-view scroll-y class="search-scroll-view hide-scroll">
+    <!-- 未开始搜索时展示历史与热门 -->
+    <view class="search-initial-wrap" wx:if="{{!isSearching}}">
+      <!-- 搜索历史 -->
+      <view class="search-block">
+        <view class="block-head">
+          <text class="block-title">搜索历史</text>
+          <view class="delete-icon-wrap" bindtap="clearHistory" wx:if="{{history.length > 0}}">
+            <text class="delete-text">🗑️</text>
+          </view>
+        </view>
+        <view class="chips-wrap" wx:if="{{history.length > 0}}">
+          <view class="chip" wx:for="{{history}}" wx:key="*this" bindtap="clickChip" data-val="{{item}}">
+            {{item}}
+          </view>
+        </view>
+        <view class="no-history" wx:else>暂无搜索历史</view>
+      </view>
+
+      <!-- 热门搜索 -->
+      <view class="search-block" style="margin-top: 50rpx;">
+        <view class="block-head">
+          <text class="block-title">热门搜索</text>
+        </view>
+        <view class="chips-wrap">
+          <view 
+            class="chip {{index < 2 ? 'hot' : ''}}" 
+            wx:for="{{hotSearches}}" 
+            wx:key="*this" 
+            bindtap="clickChip" 
+            data-val="{{item}}"
+          >
+            {{item}}
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 搜索结果列表 -->
+    <view class="search-results-wrap" wx:else>
+      <view class="results-head">
+        <text class="results-title">搜索结果</text>
+        <text class="results-count">{{results.length}}件商品</text>
+      </view>
+
+      <view class="results-list card" wx:if="{{results.length > 0}}">
+        <view 
+          class="result-item" 
+          wx:for="{{results}}" 
+          wx:key="id" 
+          bindtap="goToDetail" 
+          data-id="{{item.id}}"
+        >
+          <image src="{{item.image}}" mode="aspectFill" class="result-img" />
+          <view class="result-info">
+            <view class="result-name">{{item.name}}</view>
+            <view class="result-desc line-clamp-1">{{item.desc}}</view>
+            <view class="result-price">
+              <text class="result-price-num">{{item.price}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 结果为空 -->
+      <view class="empty-results" wx:else>
+        <view class="empty-results-icon">🔍</view>
+        <text class="empty-results-text">没有找到相关菜品，换个词试试吧</text>
+      </view>
+    </view>
+  </scroll-view>
+</view>

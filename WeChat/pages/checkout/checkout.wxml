@@ -1,0 +1,85 @@
+<!-- pages/checkout/checkout.wxml -->
+<!-- 自定义顶部栏带返回 -->
+<view class="custom-navbar" style="padding-top: {{statusBarHeight}}px; height: {{navBarHeight}}px;">
+  <view class="custom-navbar-back" bindtap="goBack">
+    <view class="custom-navbar-back-icon"></view>
+  </view>
+  <view class="custom-navbar-title">确认订单</view>
+</view>
+<view style="height: {{totalNavHeight}}px;"></view>
+
+<view class="checkout-container">
+  <scroll-view scroll-y class="checkout-scroll hide-scroll">
+    <view class="checkout-content">
+      <!-- 1. 地址卡片 -->
+      <view class="checkout-card address-card" bindtap="selectAddress">
+        <view class="address-stripe"></view>
+        <view class="address-main" wx:if="{{address}}">
+          <view class="address-title">
+            <view class="address-tag" wx:if="{{address.tag}}">{{address.tag}}</view>
+            <text class="address-region-detail">{{address.region}} {{address.detail}}</text>
+          </view>
+          <view class="address-contact">
+            <text class="contact-name">{{address.name}}</text>
+            <text class="contact-phone">{{address.phone}}</text>
+          </view>
+        </view>
+        <view class="no-address" wx:else>
+          <text class="no-address-icon">📍</text>
+          <text class="no-address-text">请选择收货地址</text>
+        </view>
+        <view class="arrow-right"></view>
+      </view>
+
+      <!-- 2. 商品列表卡片 -->
+      <view class="checkout-card food-card">
+        <view class="card-title">云味甄选（科技园店）</view>
+        <view class="food-list">
+          <view class="food-item" wx:for="{{cart}}" wx:key="cartId">
+            <image src="{{item.image || 'https://images.unsplash.com/photo-1585032226651-759b368d7246?auto=format&fit=crop&w=100&q=80'}}" mode="aspectFill" class="food-img" />
+            <view class="food-info">
+              <view class="food-name">{{item.name}}</view>
+              <view class="food-specs" wx:if="{{item.specs}}">
+                {{item.specs.size}} / {{item.specs.spice}}
+              </view>
+              <view class="food-qty">×{{item.qty}}</view>
+            </view>
+            <view class="food-price-sub">¥{{item.price * item.qty}}</view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 3. 收费明细卡片 -->
+      <view class="checkout-card bill-card">
+        <view class="bill-row">
+          <text class="bill-label">包装费</text>
+          <text class="bill-val">¥{{packFee}}</text>
+        </view>
+        <view class="bill-row">
+          <text class="bill-label">配送费</text>
+          <text class="bill-val">¥{{deliveryFee}}</text>
+        </view>
+        <view class="bill-row coupon-row" wx:if="{{discount > 0}}">
+          <view class="coupon-label-wrap">
+            <text class="coupon-icon">🎫</text>
+            <text class="bill-label">满减优惠</text>
+          </view>
+          <text class="bill-val discount-val">-¥{{discount}}</text>
+        </view>
+        <view class="bill-total-row">
+          <text class="bill-total-label">小计</text>
+          <text class="bill-total-price">¥{{finalTotal}}</text>
+        </view>
+      </view>
+    </view>
+  </scroll-view>
+
+  <!-- 4. 底部去支付条 -->
+  <view class="checkout-footer" style="padding-bottom: max(30rpx, env(safe-area-inset-bottom));">
+    <view class="pay-price-wrap">
+      <text class="pay-label">实付</text>
+      <text class="pay-price">¥{{finalTotal}}</text>
+    </view>
+    <button class="primary-btn submit-btn" bindtap="submitOrder">提交订单</button>
+  </view>
+</view>

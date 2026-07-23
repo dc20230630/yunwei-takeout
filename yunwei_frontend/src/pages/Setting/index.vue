@@ -14,6 +14,26 @@
           <h3 class="text-lg font-bold text-gray-800 mb-6">门店设置</h3>
           <el-form :model="storeSettings" label-position="top" style="max-width: 600px">
             <div class="grid grid-cols-2 gap-4">
+              <el-form-item label="营业状态" class="col-span-2">
+                <div class="flex w-full items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
+                  <div>
+                    <p class="font-medium text-gray-700">
+                      {{ appStore.shopStatus === 1 ? '营业中' : '已打烊' }}
+                    </p>
+                    <p class="mt-1 text-xs text-gray-400">
+                      {{ appStore.shopStatus === 1 ? '顾客可以正常下单' : '顾客暂时无法下单' }}
+                    </p>
+                  </div>
+                  <el-switch
+                    v-model="appStore.shopStatus"
+                    :before-change="updateShopStatus"
+                    :active-value="1"
+                    :inactive-value="0"
+                    active-text="营业"
+                    inactive-text="打烊"
+                  />
+                </div>
+              </el-form-item>
               <el-form-item label="门店名称" class="col-span-2">
                 <el-input v-model="storeSettings.storeName" />
               </el-form-item>
@@ -137,8 +157,11 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue';
 import { ElMessage } from 'element-plus';
+import { updateShopStatus as updateShopStatusRequest } from '@/api/shop';
+import { useAppStore } from '@/store/app';
 
 const activeTab = ref('store');
+const appStore = useAppStore();
 
 // 门店设置
 const storeSettings = reactive({
@@ -170,6 +193,15 @@ const notifySettings = reactive({
   refund: true,
   system: false
 });
+
+const updateShopStatus = async () => {
+  const status = appStore.shopStatus === 1 ? 0 : 1;
+
+  await updateShopStatusRequest(status);
+  ElMessage.success(status === 1 ? '店铺已开始营业' : '店铺已打烊');
+
+  return true;
+};
 
 const saveStoreSettings = () => {
   ElMessage.success('门店设置已成功保存！');

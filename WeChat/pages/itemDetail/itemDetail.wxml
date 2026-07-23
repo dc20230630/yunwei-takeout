@@ -1,0 +1,125 @@
+<!-- pages/itemDetail/itemDetail.wxml -->
+<!-- 自定义顶部栏带返回 -->
+<view class="custom-navbar" style="padding-top: {{statusBarHeight}}px; height: {{navBarHeight}}px; background: rgba(255, 255, 255, 0.95);">
+  <view class="custom-navbar-back" bindtap="goBack">
+    <view class="custom-navbar-back-icon"></view>
+  </view>
+  <view class="custom-navbar-title">{{food.name || '商品详情'}}</view>
+</view>
+<view style="height: {{totalNavHeight}}px;"></view>
+
+<scroll-view scroll-y class="detail-scroll-view hide-scroll">
+  <image src="{{food.image}}" mode="aspectFill" class="detail-banner-img" />
+
+  <!-- 详情卡片 -->
+  <view class="detail-info-card card">
+    <view class="detail-price-row">
+      <view class="detail-price">
+        <text class="detail-price-symbol">¥</text>
+        <text class="detail-price-num">{{food.price}}</text>
+      </view>
+      <view class="detail-original-price" wx:if="{{food.originalPrice}}">
+        ¥{{food.originalPrice}}
+      </view>
+    </view>
+
+    <view class="detail-name">{{food.name}}</view>
+    <view class="detail-desc">{{food.desc}}</view>
+  </view>
+
+  <!-- 套餐需要额外展示后端返回的菜品明细 -->
+  <view class="detail-story-card card" wx:if="{{food.productType === 'setmeal'}}">
+    <view class="story-title">套餐包含</view>
+    <view wx:for="{{setmealDishes}}" wx:key="name" class="drawer-row">
+      <image src="{{item.image}}" mode="aspectFill" class="sales-img" />
+      <view class="drawer-food-info">
+        <view class="drawer-food-name">{{item.name}}</view>
+        <view class="drawer-food-specs">× {{item.copies}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 食材介绍/备注说明 -->
+  <view class="detail-story-card card">
+    <view class="story-title">云味故事</view>
+    <view class="story-content">
+      精选上等新鲜食材，由云味大师倾心调配秘制酱汁，经过多道严格工艺精心烹饪而成。香气扑鼻，口感浓郁，是您日常干饭、家庭聚餐的绝佳臻选！
+    </view>
+    <view class="story-tags">
+      <text class="story-tag">新鲜食材</text>
+      <text class="story-tag">精心烹制</text>
+      <text class="story-tag">经典美味</text>
+    </view>
+  </view>
+</scroll-view>
+
+<!-- 底部操作悬浮栏 -->
+<view class="detail-footer" style="padding-bottom: max(30rpx, env(safe-area-inset-bottom));">
+  <!-- 小购物车图标 -->
+  <view class="footer-cart-wrap" bindtap="goToMenu">
+    <view class="footer-cart-circle {{cartCount > 0 ? 'has-items' : ''}}">
+      <text class="footer-cart-icon">🛒</text>
+      <view class="footer-cart-badge" wx:if="{{cartCount > 0}}">{{cartCount}}</view>
+    </view>
+    <text class="footer-cart-label">点餐</text>
+  </view>
+
+  <!-- 购买动作按钮 -->
+  <view class="footer-actions">
+    <!-- 有规格：选规格加车 -->
+    <button class="primary-btn footer-btn" wx:if="{{food.hasSpecs}}" bindtap="openSpecs">
+      选规格加入
+    </button>
+    
+    <!-- 无规格：加车或步进器 -->
+    <block wx:else>
+      <view class="stepper-wrap" wx:if="{{foodInCartQty > 0}}">
+        <view class="minus-btn" bindtap="decreaseQtyDirect">-</view>
+        <text class="stepper-count">{{foodInCartQty}}</text>
+        <view class="plus-btn" bindtap="increaseQtyDirect">+</view>
+      </view>
+      <button class="primary-btn footer-btn" wx:else bindtap="increaseQtyDirect">
+        加入购物车
+      </button>
+    </block>
+  </view>
+</view>
+
+<!-- 多规格选择弹窗 Dialog -->
+<view class="dialog-mask" wx:if="{{showSpecsDialog}}" bindtap="closeSpecs">
+  <view class="dialog-sheet card" catchtap="preventBubble">
+    <view class="dialog-close" bindtap="closeSpecs">×</view>
+    <view class="spec-food-head">
+      <image src="{{food.image}}" mode="aspectFill" class="spec-food-img" />
+      <view class="spec-food-info">
+        <view class="spec-food-name">{{food.name}}</view>
+        <view class="spec-food-price">
+          <text class="spec-price-val">{{food.price}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 后端返回的菜品口味 -->
+    <view class="spec-groups">
+      <view class="spec-group" wx:for="{{flavorGroups}}" wx:key="name" wx:for-item="group">
+        <view class="spec-group-title">{{group.name}}</view>
+        <view class="spec-options">
+          <view 
+            class="spec-option {{option.selected ? 'active' : ''}}"
+            wx:for="{{group.options}}"
+            wx:for-item="option"
+            wx:key="value"
+            bindtap="selectFlavor"
+            data-name="{{group.name}}"
+            data-value="{{option.value}}"
+          >
+            {{option.value}}
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 加入按钮 -->
+    <button class="primary-btn dialog-submit" bindtap="addSpecFoodToCart">加入购物车</button>
+  </view>
+</view>

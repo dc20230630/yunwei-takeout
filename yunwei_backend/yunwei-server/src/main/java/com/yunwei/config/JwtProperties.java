@@ -20,4 +20,11 @@ public class JwtProperties {
 
     // JWT 过期时间，单位是小时
     private long expireHours;
+
+    /**
+     * 用户端微信用户生成jwt令牌相关配置
+     */
+    private String userSecretKey;
+    private long userTtl;
+    private String userTokenName;
 }

@@ -10,6 +10,10 @@ spring:
     username: root
     password: 1234
     driver-class-name: com.mysql.cj.jdbc.Driver
+  data:
+    redis:
+      password: 1234
+      database: 10
 
 mybatis:
   mapper-locations: classpath:mapper/*.xml
@@ -29,6 +33,9 @@ yunwei:
   jwt:
     secret: eXVud2VpLWp3dC1zZWNyZXQta2V5LXBsZWFzZS1jaGFuZ2UtaW4tcHJvZHVjdGlvbi0yMDI2
     expire-hours: 2
+    user-secret-key: 5kWmwGBFLVRshkLF3vqC1EsG6Ty43kmxRa0ekxanqeo=
+    user-ttl: 7200000
+    user-token-name: authentication
 
   oss:
     endpoint: oss-cn-beijing.aliyuncs.com
@@ -36,4 +43,16 @@ yunwei:
     access-key-id: ${OSS_ACCESS_KEY_ID}
     access-key-secret: ${OSS_ACCESS_KEY_SECRET}
     region: cn-beijing
+
+  wechat:
+    app-id: ${WECHAT_APP_ID}
+    app-secret: ${WECHAT_APP_SECRET}
+    # 微信支付功能开发时，再配置以下环境变量
+    mch-id:
+    mch-serial-no:
+    private-key-file-path:
+    api-v3-key:
+    wechat-pay-cert-file-path:
+    notify-url:
+    refund-notify-url:
 

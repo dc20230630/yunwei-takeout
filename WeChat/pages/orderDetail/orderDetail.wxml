@@ -1,0 +1,116 @@
+<!-- pages/orderDetail/orderDetail.wxml -->
+<!-- 自定义顶部栏带返回 -->
+<view class="custom-navbar" style="padding-top: {{statusBarHeight}}px; height: {{navBarHeight}}px;">
+  <view class="custom-navbar-back" bindtap="goBack">
+    <view class="custom-navbar-back-icon"></view>
+  </view>
+  <view class="custom-navbar-title">订单详情</view>
+</view>
+<view style="height: {{totalNavHeight}}px;"></view>
+
+<view class="detail-container">
+  <scroll-view scroll-y class="detail-scroll hide-scroll">
+    <!-- 1. 地图轨迹占位区 -->
+    <view class="map-box-wrap">
+      <view class="map-box">
+        <view class="map-tip">
+          <view class="map-tip-title">{{order.status}}</view>
+          <view class="map-tip-desc" wx:if="{{order.status === '待接单'}}">正在为您匹配附近骑手...</view>
+          <view class="map-tip-desc" wx:elif="{{order.status === '制作中'}}">后厨正在精心烹饪中，请耐心等候</view>
+          <view class="map-tip-desc" wx:elif="{{order.status === '配送中'}}">骑手距离您 1.2 公里，预估 12 分钟送达</view>
+          <view class="map-tip-desc" wx:else>订单已安全送达，感谢您的信任！</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="detail-content">
+      <!-- 2. 骑手信息 (仅配送中和已完成展示) -->
+      <view class="rider-card card" wx:if="{{order.status === '配送中' || order.status === '已完成'}}">
+        <view class="rider-avatar">👤</view>
+        <view class="rider-info">
+          <view class="rider-name">王小二 (配送员)</view>
+          <view class="rider-phone">蜂鸟专送 · 准时达保障</view>
+        </view>
+        <button class="call-rider-btn" bindtap="callRider">📞 呼叫</button>
+      </view>
+
+      <!-- 3. 商品清单明细 -->
+      <view class="checkout-card food-card card">
+        <view class="card-title">商品明细</view>
+        <view class="food-list">
+          <view class="food-item" wx:for="{{order.items}}" wx:key="id">
+            <image src="{{item.image || 'https://images.unsplash.com/photo-1585032226651-759b368d7246?auto=format&fit=crop&w=100&q=80'}}" mode="aspectFill" class="food-img" />
+            <view class="food-info">
+              <view class="food-name">{{item.name}}</view>
+              <view class="food-specs" wx:if="{{item.specs}}">
+                {{item.specs.size}} / {{item.specs.spice}}
+              </view>
+              <view class="food-qty">×{{item.qty}}</view>
+            </view>
+            <view class="food-price-sub">¥{{item.price * item.qty}}</view>
+          </view>
+        </view>
+        
+        <!-- 账单小计 -->
+        <view class="bill-breakdown">
+          <view class="bill-line">
+            <text class="bill-line-label">包装费</text>
+            <text class="bill-line-val">¥2.00</text>
+          </view>
+          <view class="bill-line">
+            <text class="bill-line-label">配送费</text>
+            <text class="bill-line-val">¥2.00</text>
+          </view>
+          <view class="bill-line coupon-line" wx:if="{{order.total >= 30}}">
+            <text class="bill-line-label">满减优惠</text>
+            <text class="bill-line-val">-¥5.00</text>
+          </view>
+          <view class="bill-line final-line">
+            <text class="final-label">实付款</text>
+            <text class="final-val">¥{{order.total}}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 4. 订单基础信息 -->
+      <view class="info-card card">
+        <view class="card-title">配送信息</view>
+        <view class="info-list">
+          <view class="info-row">
+            <text class="info-label">收货人</text>
+            <text class="info-val">张先生 138****8888</text>
+          </view>
+          <view class="info-row">
+            <text class="info-label">送达地址</text>
+            <text class="info-val">广东省深圳市南山区科技园大厦 A座 801</text>
+          </view>
+          <view class="info-row">
+            <text class="info-label">配送服务</text>
+            <text class="info-val">蜂鸟专送 (预估30分钟送达)</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="info-card card" style="margin-bottom: 80rpx;">
+        <view class="card-title">订单信息</view>
+        <view class="info-list">
+          <view class="info-row">
+            <text class="info-label">订单编号</text>
+            <view class="info-val copy-wrap">
+              <text class="order-id-txt">{{order.id}}</text>
+              <button class="copy-btn" bindtap="copyOrderId">复制</button>
+            </view>
+          </view>
+          <view class="info-row">
+            <text class="info-label">下单时间</text>
+            <text class="info-val">{{order.time}}</text>
+          </view>
+          <view class="info-row">
+            <text class="info-label">支付方式</text>
+            <text class="info-val">微信支付</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </scroll-view>
+</view>

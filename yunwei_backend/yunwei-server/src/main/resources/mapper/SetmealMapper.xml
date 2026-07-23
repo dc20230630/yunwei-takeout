@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yunwei.mapper.SetmealMapper">
+
+    <resultMap id="setmealWithDishMap" type="com.yunwei.pojo.vo.SetmealVo">
+        <id column="id" property="id"/>
+        <result column="category_id" property="categoryId"/>
+        <result column="name" property="name"/>
+        <result column="price" property="price"/>
+        <result column="status" property="status"/>
+        <result column="description" property="description"/>
+        <result column="image" property="image"/>
+        <result column="update_time" property="updateTime"/>
+        <collection property="setmealDishes" ofType="com.yunwei.pojo.entity.SetmealDish">
+            <id column="sd_id" property="id"/>
+            <result column="sd_setmeal_id" property="setmealId"/>
+            <result column="sd_dish_id" property="dishId"/>
+            <result column="sd_name" property="name"/>
+            <result column="sd_price" property="price"/>
+            <result column="sd_copies" property="copies"/>
+        </collection>
+    </resultMap>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO setmeal (category_id, name, price, status, description, image,
+                             create_time, update_time, create_user, update_user)
+        VALUES (#{categoryId}, #{name}, #{price}, #{status}, #{description}, #{image},
+                #{createTime}, #{updateTime}, #{createUser}, #{updateUser})
+    </insert>
+
+    <update id="update">
+        UPDATE setmeal
+        <set>
+            <if test="name != null">name = #{name},</if>
+            <if test="categoryId != null">category_id = #{categoryId},</if>
+            <if test="price != null">price = #{price},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="image != null">image = #{image},</if>
+            update_time = #{updateTime},
+            update_user = #{updateUser}
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <select id="pageQuery" resultType="com.yunwei.pojo.vo.SetmealVo">
+        SELECT s.id,
+               s.category_id AS categoryId,
+               c.name AS categoryName,
+               s.name,
+               s.price,
+               s.status,
+               s.description,
+               s.image,
+               s.update_time AS updateTime
+        FROM setmeal s
+        LEFT JOIN category c ON s.category_id = c.id
+        <where>
+            <if test="name != null and name != ''">
+                AND s.name LIKE CONCAT('%', #{name}, '%')
+            </if>
+            <if test="categoryId != null">
+                AND s.category_id = #{categoryId}
+            </if>
+            <if test="status != null">
+                AND s.status = #{status}
+            </if>
+        </where>
+        ORDER BY s.update_time DESC
+    </select>
+
+    <select id="selectById" resultType="com.yunwei.pojo.entity.Setmeal">
+        SELECT id,
+               category_id AS categoryId,
+               name,
+               price,
+               status,
+               description,
+               image,
+               create_time AS createTime,
+               update_time AS updateTime,
+               create_user AS createUser,
+               update_user AS updateUser
+        FROM setmeal
+        WHERE id = #{id}
+    </select>
+
+    <delete id="deleteByIds">
+        DELETE FROM setmeal
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <select id="getByIdWithDish" resultMap="setmealWithDishMap">
+        SELECT s.id,
+               s.category_id,
+               s.name,
+               s.price,
+               s.status,
+               s.description,
+               s.image,
+               s.update_time,
+               sd.id AS sd_id,
+               sd.setmeal_id AS sd_setmeal_id,
+               sd.dish_id AS sd_dish_id,
+               sd.name AS sd_name,
+               sd.price AS sd_price,
+               sd.copies AS sd_copies
+        FROM setmeal s
+        LEFT JOIN setmeal_dish sd ON s.id = sd.setmeal_id
+        WHERE s.id = #{id}
+    </select>
+
+    <!-- 用户端按分类浏览起售套餐 -->
+    <select id="list" resultType="com.yunwei.pojo.entity.Setmeal">
+        SELECT id,
+               category_id AS categoryId,
+               name,
+               price,
+               status,
+               description,
+               image,
+               create_time AS createTime,
+               update_time AS updateTime,
+               create_user AS createUser,
+               update_user AS updateUser
+        FROM setmeal
+        <where>
+            <if test="categoryId != null">
+                AND category_id = #{categoryId}
+            </if>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+        </where>
+        ORDER BY update_time DESC
+    </select>
+
+    <!-- 套餐详情只需要展示菜品名称、份数、图片和描述 -->
+    <select id="getDishItemBySetmealId" resultType="com.yunwei.pojo.vo.DishItemVo">
+        SELECT sd.name,
+               sd.copies,
+               d.image,
+               d.description
+        FROM setmeal_dish sd
+        LEFT JOIN dish d ON sd.dish_id = d.id
+        WHERE sd.setmeal_id = #{setmealId}
+    </select>
+</mapper>

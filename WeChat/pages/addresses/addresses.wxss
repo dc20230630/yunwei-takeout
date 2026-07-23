@@ -1,0 +1,144 @@
+/* pages/addresses/addresses.wxss */
+.address-container {
+  height: calc(100vh - 100rpx);
+  background-color: var(--gray-50);
+  display: flex;
+  flex-direction: column;
+}
+
+.address-scroll {
+  flex: 1;
+  overflow: hidden;
+}
+
+.address-list {
+  padding: 24rpx 24rpx 150rpx;
+}
+
+.address-card {
+  padding: 30rpx;
+  margin-bottom: 24rpx;
+  display: flex;
+  align-items: center;
+  border: 2rpx solid transparent;
+}
+
+.address-card.selected {
+  border-color: var(--orange);
+  background-color: #fffaf7;
+}
+
+/* 勾选符号 */
+.select-check {
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
+  background-color: var(--orange);
+  color: #ffffff;
+  font-weight: bold;
+  display: grid;
+  place-items: center;
+  font-size: 24rpx;
+  margin-right: 20rpx;
+}
+
+.address-main {
+  flex: 1;
+  padding-right: 20rpx;
+}
+
+.user-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12rpx;
+}
+
+.user-name {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: var(--gray-900);
+  margin-right: 16rpx;
+}
+
+.user-tag {
+  font-size: 18rpx;
+  background-color: #dbeafe;
+  color: #2563eb;
+  padding: 2rpx 12rpx;
+  border-radius: 6rpx;
+  font-weight: bold;
+  margin-right: 12rpx;
+}
+
+.default-badge {
+  font-size: 18rpx;
+  background-color: var(--orange-soft);
+  color: var(--orange);
+  padding: 2rpx 12rpx;
+  border-radius: 6rpx;
+  font-weight: bold;
+  border: 1rpx solid rgba(255, 107, 33, 0.2);
+}
+
+.phone-num {
+  font-size: 24rpx;
+  color: var(--gray-500);
+  margin-bottom: 10rpx;
+}
+
+.detail-addr {
+  font-size: 26rpx;
+  color: var(--gray-600);
+  line-height: 1.5;
+}
+
+.edit-btn-wrap {
+  width: 70rpx;
+  height: 70rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-left: 1rpx solid var(--gray-100);
+  padding-left: 10rpx;
+}
+
+.edit-btn-icon {
+  font-size: 34rpx;
+}
+
+/* 空地址状态 */
+.empty-address {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 200rpx 40rpx;
+}
+
+.empty-icon {
+  font-size: 100rpx;
+  margin-bottom: 24rpx;
+}
+
+.empty-text {
+  font-size: 26rpx;
+  color: var(--gray-400);
+}
+
+/* 底部操作 */
+.bottom-action-wrap {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ffffff;
+  border-top: 1rpx solid var(--gray-200);
+  padding: 16rpx 30rpx;
+  z-index: 50;
+}
+
+.add-btn {
+  width: 100% !important;
+  font-size: 30rpx;
+  padding: 24rpx 0;
+}

@@ -1,0 +1,58 @@
+<!-- pages/review/review.wxml -->
+<!-- 自定义顶部栏带返回 -->
+<view class="custom-navbar" style="padding-top: {{statusBarHeight}}px; height: {{navBarHeight}}px;">
+  <view class="custom-navbar-back" bindtap="goBack">
+    <view class="custom-navbar-back-icon"></view>
+  </view>
+  <view class="custom-navbar-title">发表评价</view>
+</view>
+<view style="height: {{totalNavHeight}}px;"></view>
+
+<view class="review-container">
+  <view class="review-card card review-shop-section">
+    <image class="shop-logo" src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=140&q=80" mode="aspectFill" />
+    <view class="shop-name">云味甄选（科技园店）</view>
+    
+    <!-- 评分星级 (Unicode 星号渲染) -->
+    <view class="stars-row">
+      <view 
+        class="star-item {{score >= item ? 'active' : ''}}" 
+        wx:for="{{[1, 2, 3, 4, 5]}}" 
+        wx:key="*this"
+        bindtap="selectStar" 
+        data-val="{{item}}"
+      >
+        {{score >= item ? '★' : '☆'}}
+      </view>
+    </view>
+    <view class="score-desc">{{scoreTexts[score] || '期待您的评价'}}</view>
+  </view>
+
+  <!-- 评价文本框 -->
+  <view class="review-card card text-section">
+    <textarea 
+      placeholder="写下您的用餐体验，分享给其他干饭人吧（例：味道不错，包装也很好，送餐速度很快！）..." 
+      value="{{content}}"
+      bindinput="onInput"
+      maxlength="200"
+      class="review-textarea"
+    />
+    <view class="text-counter">{{content.length}}/200</view>
+  </view>
+
+  <!-- 匿名设置 -->
+  <view class="review-card card anonymous-section">
+    <text class="anonymous-label">匿名评价</text>
+    <switch 
+      checked="{{isAnonymous}}" 
+      color="#ff6b21" 
+      bindchange="onAnonymousChange"
+      class="anonymous-switch"
+    />
+  </view>
+
+  <!-- 提交 -->
+  <view class="submit-wrap">
+    <button class="primary-btn submit-btn" bindtap="submitReview">发布评价</button>
+  </view>
+</view>

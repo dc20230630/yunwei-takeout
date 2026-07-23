@@ -66,4 +66,9 @@ public interface DishMapper {
      */
     @AutoFill(Operation.UPDATE)
     void updateStatus(Dish dish);
+
+    /**
+     * 按分类和售卖状态查询菜品，供用户端浏览使用。
+     */
+    List<Dish> list(Dish dish);
 }

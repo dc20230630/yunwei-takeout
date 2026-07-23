@@ -1,0 +1,263 @@
+/* pages/checkout/checkout.wxss */
+.checkout-container {
+  height: calc(100vh - 100rpx);
+  background-color: var(--gray-50);
+  display: flex;
+  flex-direction: column;
+}
+
+.checkout-scroll {
+  flex: 1;
+  overflow: hidden;
+}
+
+.checkout-content {
+  padding: 24rpx 24rpx 140rpx;
+}
+
+.checkout-card {
+  background-color: #ffffff;
+  border-radius: 32rpx;
+  padding: 30rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.03);
+  position: relative;
+}
+
+/* 收货地址卡片 */
+.address-card {
+  padding-top: 40rpx;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+
+.address-stripe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 8rpx;
+  background: repeating-linear-gradient(135deg, #f87171 0, #f87171 20rpx, #ffffff 20rpx, #ffffff 36rpx, #60a5fa 36rpx, #60a5fa 56rpx, #ffffff 56rpx, #ffffff 72rpx);
+}
+
+.address-main {
+  flex: 1;
+  padding-right: 20rpx;
+}
+
+.address-title {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12rpx;
+}
+
+.address-tag {
+  font-size: 20rpx;
+  border-radius: 8rpx;
+  padding: 4rpx 12rpx;
+  margin-right: 12rpx;
+  background-color: #dbeafe;
+  color: #2563eb;
+  font-weight: bold;
+}
+
+.address-region-detail {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: var(--gray-900);
+}
+
+.address-contact {
+  font-size: 24rpx;
+  color: var(--gray-500);
+  display: flex;
+  gap: 16rpx;
+}
+
+.no-address {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 10rpx 0;
+}
+
+.no-address-icon {
+  font-size: 40rpx;
+}
+
+.no-address-text {
+  font-size: 28rpx;
+  color: var(--gray-400);
+}
+
+.arrow-right {
+  width: 14rpx;
+  height: 14rpx;
+  border-top: 3rpx solid var(--gray-300);
+  border-right: 3rpx solid var(--gray-300);
+  transform: rotate(45deg);
+}
+
+/* 商品清单 */
+.food-card {
+  padding: 30rpx;
+}
+
+.card-title {
+  font-size: 26rpx;
+  font-weight: bold;
+  color: var(--gray-400);
+  border-bottom: 1rpx solid var(--gray-100);
+  padding-bottom: 16rpx;
+  margin-bottom: 20rpx;
+}
+
+.food-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 24rpx;
+}
+
+.food-item:last-child {
+  margin-bottom: 0;
+}
+
+.food-img {
+  width: 90rpx;
+  height: 90rpx;
+  border-radius: 12rpx;
+  background-color: var(--gray-100);
+  margin-right: 20rpx;
+}
+
+.food-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 90rpx;
+  padding: 2rpx 0;
+}
+
+.food-name {
+  font-size: 26rpx;
+  font-weight: bold;
+  color: var(--gray-900);
+}
+
+.food-specs {
+  font-size: 20rpx;
+  color: var(--gray-400);
+}
+
+.food-qty {
+  font-size: 22rpx;
+  color: var(--gray-500);
+}
+
+.food-price-sub {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: var(--gray-900);
+}
+
+/* 费用明细 */
+.bill-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 26rpx;
+  color: var(--gray-600);
+  margin-bottom: 20rpx;
+}
+
+.bill-val {
+  color: var(--gray-900);
+}
+
+.coupon-row {
+  color: var(--red);
+}
+
+.coupon-label-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.coupon-icon {
+  font-size: 28rpx;
+}
+
+.discount-val {
+  color: var(--red);
+  font-weight: bold;
+}
+
+.bill-total-row {
+  border-top: 1rpx solid var(--gray-100);
+  padding-top: 24rpx;
+  margin-top: 24rpx;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.bill-total-label {
+  font-size: 26rpx;
+  font-weight: bold;
+  color: var(--gray-900);
+}
+
+.bill-total-price {
+  font-size: 38rpx;
+  font-weight: bold;
+  color: var(--orange);
+}
+
+/* 底部结算支付栏 */
+.checkout-footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 128rpx;
+  background-color: #ffffff;
+  border-top: 1rpx solid var(--gray-200);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16rpx 30rpx;
+  z-index: 80;
+}
+
+.pay-price-wrap {
+  display: flex;
+  align-items: baseline;
+}
+
+.pay-label {
+  font-size: 26rpx;
+  color: var(--gray-600);
+  margin-right: 12rpx;
+}
+
+.pay-price {
+  font-size: 48rpx;
+  font-weight: bold;
+  color: var(--orange);
+}
+
+.pay-price::before {
+  content: "¥";
+  font-size: 28rpx;
+  margin-right: 2rpx;
+}
+
+.submit-btn {
+  margin: 0;
+  font-size: 30rpx;
+  padding: 22rpx 60rpx;
+}

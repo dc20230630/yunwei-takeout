@@ -3,6 +3,7 @@ import { ref } from 'vue';
 
 export const useAppStore = defineStore('app', () => {
   const isCollapse = ref<boolean>(false);
+  const shopStatus = ref<number>(1);
 
   const toggleCollapse = () => {
     isCollapse.value = !isCollapse.value;
@@ -12,9 +13,15 @@ export const useAppStore = defineStore('app', () => {
     isCollapse.value = value;
   };
 
+  const setShopStatus = (value: number) => {
+    shopStatus.value = value;
+  };
+
   return {
     isCollapse,
+    shopStatus,
     toggleCollapse,
     setCollapse,
+    setShopStatus,
   };
 });

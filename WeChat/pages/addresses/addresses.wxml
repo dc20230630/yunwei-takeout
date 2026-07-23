@@ -1,0 +1,55 @@
+<!-- pages/addresses/addresses.wxml -->
+<!-- 自定义顶部栏带返回 -->
+<view class="custom-navbar" style="padding-top: {{statusBarHeight}}px; height: {{navBarHeight}}px;">
+  <view class="custom-navbar-back" bindtap="goBack">
+    <view class="custom-navbar-back-icon"></view>
+  </view>
+  <view class="custom-navbar-title">收货地址</view>
+</view>
+<view style="height: {{totalNavHeight}}px;"></view>
+
+<view class="address-container">
+  <scroll-view scroll-y class="address-scroll hide-scroll">
+    <view class="address-list" wx:if="{{addresses.length > 0}}">
+      <view 
+        class="address-card card {{selectedAddressId === item.id ? 'selected' : ''}}" 
+        wx:for="{{addresses}}" 
+        wx:key="id"
+        bindtap="onSelectAddress"
+        data-item="{{item}}"
+      >
+        <!-- 左侧勾选标识（仅从结算页进入时显示） -->
+        <view class="select-check" wx:if="{{isFromCheckout && selectedAddressId === item.id}}">
+          ✓
+        </view>
+
+        <!-- 地址信息主体 -->
+        <view class="address-main">
+          <view class="user-row">
+            <text class="user-name">{{item.name}}</text>
+            <text class="user-tag" wx:if="{{item.tag}}">{{item.tag}}</text>
+            <text class="default-badge" wx:if="{{item.isDefault}}">默认</text>
+          </view>
+          <view class="phone-num">{{item.phone}}</view>
+          <view class="detail-addr">{{item.region}} {{item.detail}}</view>
+        </view>
+
+        <!-- 右侧编辑按钮 -->
+        <view class="edit-btn-wrap" catchtap="goToEdit" data-id="{{item.id}}">
+          <text class="edit-btn-icon">✏️</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 地址为空 -->
+    <view class="empty-address" wx:else>
+      <view class="empty-icon">📍</view>
+      <text class="empty-text">您还没有添加收货地址</text>
+    </view>
+  </scroll-view>
+
+  <!-- 底部新增按钮 -->
+  <view class="bottom-action-wrap" style="padding-bottom: max(30rpx, env(safe-area-inset-bottom));">
+    <button class="primary-btn add-btn" bindtap="goToAdd">新增收货地址</button>
+  </view>
+</view>

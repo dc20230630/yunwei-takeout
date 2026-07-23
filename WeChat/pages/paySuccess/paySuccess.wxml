@@ -1,0 +1,31 @@
+<!-- pages/paySuccess/paySuccess.wxml -->
+<!-- 自定义顶部栏 -->
+<view class="custom-navbar" style="padding-top: {{statusBarHeight}}px; height: {{navBarHeight}}px;">
+  <view class="custom-navbar-title">支付成功</view>
+</view>
+<view style="height: {{totalNavHeight}}px;"></view>
+
+<view class="success-container">
+  <view class="success-wrap">
+    <!-- 成功的圆圈对勾图标 -->
+    <view class="success-icon-wrap">
+      <view class="success-circle">
+        <view class="checkmark-icon"></view>
+      </view>
+    </view>
+    
+    <view class="success-title">支付成功</view>
+    <view class="success-subtitle">商家已收到您的订单，正在紧急处理</view>
+    
+    <view class="pay-amount">
+      <text class="amount-symbol">¥</text>
+      <text class="amount-val">{{amount}}</text>
+    </view>
+
+    <!-- 交互按钮 -->
+    <view class="action-buttons-wrap">
+      <button class="primary-btn view-order-btn" bindtap="goToOrderDetail">查看订单</button>
+      <button class="plain-btn back-home-btn" bindtap="goToHome">返回首页</button>
+    </view>
+  </view>
+</view>

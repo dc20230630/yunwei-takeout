@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import com.yunwei.interceptor.JwtTokenInterceptor;
+import com.yunwei.interceptor.UserJwtTokenInterceptor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
@@ -30,6 +31,10 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
      * 使用构造方法注入，Spring 会自动传入 JwtTokenInterceptor 对象。
      */
     private final JwtTokenInterceptor jwtTokenInterceptor;
+    /**
+     * JWT 用户端拦截器。
+     */
+    private final UserJwtTokenInterceptor userJwtTokenInterceptor;
 
     /**
      * 注册 JWT 拦截器。
@@ -45,11 +50,17 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
         registry.addInterceptor(jwtTokenInterceptor)
                 .addPathPatterns("/admin/**")
                 .excludePathPatterns("/admin/employee/login");
+
+        registry.addInterceptor(userJwtTokenInterceptor)
+                // 用户端接口默认需要登录
+                .addPathPatterns("/user/**")
+                // 登录前没有 Token；查询营业状态也应允许未登录用户访问
+                .excludePathPatterns("/user/user/login", "/user/shop/status");
     }
 
     /**
      * 扩展Spring MVC框架的消息转化器
-     * 
+     *
      * @param converters
      */
     @Override

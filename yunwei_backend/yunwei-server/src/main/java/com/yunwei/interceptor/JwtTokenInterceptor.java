@@ -30,7 +30,7 @@ public class JwtTokenInterceptor implements HandlerInterceptor {
      * 返回 true：允许继续访问 Controller。
      * 抛出异常：阻止访问 Controller。
      */
-    @Override
+    @Override 
     public boolean preHandle(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
             @NonNull Object handler) {
         // 获取请求头中的Authorization内容

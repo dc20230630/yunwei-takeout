@@ -171,4 +171,21 @@ public class DishServiceImpl implements DishService {
         }
 
     }
+
+    /**
+     * 查询指定分类中起售的菜品，并补充每个菜品的口味。
+     */
+    @Override
+    public List<DishVo> listWithFlavor(Dish dish) {
+        List<Dish> dishes = dishMapper.list(dish);
+
+        return dishes.stream().map(currentDish -> {
+            DishVo dishVo = new DishVo();
+            BeanUtils.copyProperties(currentDish, dishVo);
+
+            // 口味存放在独立表中，需要按菜品逐个查询
+            dishVo.setFlavors(dishFlavorMapper.selectByDishId(currentDish.getId()));
+            return dishVo;
+        }).toList();
+    }
 }

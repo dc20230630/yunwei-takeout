@@ -4,6 +4,7 @@ import com.yunwei.common.result.PageResult;
 import com.yunwei.pojo.dto.DishDTO;
 import com.yunwei.pojo.dto.DishPageQueryDTO;
 import com.yunwei.pojo.dto.DishUpdateDTO;
+import com.yunwei.pojo.entity.Dish;
 import com.yunwei.pojo.vo.DishVo;
 import jakarta.validation.Valid;
 
@@ -45,4 +46,9 @@ public interface DishService {
      * 修改菜品及其口味。
      */
     void updateWithFlavor(DishUpdateDTO dishUpdateDTO);
+
+    /**
+     * 按条件查询菜品及其口味，供用户端浏览菜品。
+     */
+    List<DishVo> listWithFlavor(Dish dish);
 }

@@ -1,5 +1,6 @@
 package com.yunwei.mapper;
 
+import com.yunwei.pojo.entity.SetmealDish;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -14,4 +15,11 @@ public interface SetmealDishMapper {
      * @return 关联数量
      */
     Integer countByDishIds(@Param("ids") List<Long> ids);
+
+    void insertBatch(@Param("setmealDishes") List<SetmealDish> setmealDishes);
+
+    void deleteBySetmealIds(@Param("setmealIds") List<Long> setmealIds);
+
+    Integer countDisabledDishBySetmealId(@Param("setmealId") Long setmealId,
+                                         @Param("status") Integer status);
 }

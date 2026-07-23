@@ -1,0 +1,78 @@
+<!-- pages/profile/profile.wxml -->
+<!-- 自定义顶部栏 -->
+<view class="custom-navbar" style="padding-top: {{statusBarHeight}}px; height: {{navBarHeight}}px; background: linear-gradient(135deg, #fb923c, #ff6b21); border-bottom: none;">
+  <view class="custom-navbar-title" style="color: #ffffff;">个人中心</view>
+</view>
+<view style="height: {{totalNavHeight}}px;"></view>
+
+<view class="profile-container">
+  <!-- 头部用户卡片 -->
+  <view class="profile-head-wrap">
+    <view class="profile-head">
+      <view class="profile-user" bindtap="{{isLoggedIn ? '' : 'goToLogin'}}">
+        <image 
+          src="{{isLoggedIn ? (userInfo.avatarUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&q=80') : 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&q=80'}}" 
+          mode="aspectFill" 
+          class="user-avatar"
+        />
+        <view class="user-info">
+          <block wx:if="{{isLoggedIn}}">
+            <view class="user-name">{{userInfo.nickname || '云味会员'}}</view>
+            <view class="user-phone">{{userInfo.phone || '138****8888'}}</view>
+          </block>
+          <block wx:else>
+            <view class="user-name">点击登录/注册</view>
+            <view class="user-phone">登录后享受更多特权</view>
+          </block>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 统计资产指标 -->
+  <view class="profile-stats-card card">
+    <view class="profile-stats">
+      <view class="profile-stat">
+        <text class="stat-num">3</text>
+        <text class="stat-label">优惠券</text>
+      </view>
+      <view class="profile-stat">
+        <text class="stat-num">¥88.50</text>
+        <text class="stat-label">账户余额</text>
+      </view>
+      <view class="profile-stat" style="border-right: none;">
+        <text class="stat-num">520</text>
+        <text class="stat-label">积分</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 功能列表 -->
+  <view class="profile-menu card">
+    <view class="profile-item" bindtap="goToAddresses">
+      <view class="menu-icon">📍</view>
+      <text class="menu-title">收货地址</text>
+      <view class="arrow-right"></view>
+    </view>
+
+    <view class="profile-item" bindtap="contactService">
+      <view class="menu-icon">💬</view>
+      <text class="menu-title">我的客服</text>
+      <view class="arrow-right"></view>
+    </view>
+
+    <view class="profile-item" bindtap="showAgreement">
+      <view class="menu-icon">📄</view>
+      <text class="menu-title">用户协议与隐私政策</text>
+      <view class="arrow-right"></view>
+    </view>
+  </view>
+
+  <!-- 退出登录按钮 -->
+  <view class="logout-btn-wrap" wx:if="{{isLoggedIn}}">
+    <button class="logout-btn plain-btn" bindtap="logout">退出登录</button>
+  </view>
+
+  <!-- 版本信息 -->
+  <view class="version-label">Version 1.0.0</view>
+</view>

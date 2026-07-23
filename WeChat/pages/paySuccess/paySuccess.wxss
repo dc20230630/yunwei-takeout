@@ -1,0 +1,88 @@
+/* pages/paySuccess/paySuccess.wxss */
+.success-container {
+  min-height: calc(100vh - 100rpx);
+  background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
+}
+
+.success-wrap {
+  padding: 120rpx 48rpx 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* 绿色圆圈对勾 */
+.success-icon-wrap {
+  margin-bottom: 40rpx;
+}
+
+.success-circle {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 50%;
+  background-color: #dcfce7;
+  display: grid;
+  place-items: center;
+}
+
+.checkmark-icon {
+  width: 50rpx;
+  height: 26rpx;
+  border-left: 6rpx solid var(--green);
+  border-bottom: 6rpx solid var(--green);
+  transform: rotate(-45deg);
+  margin-top: -10rpx;
+}
+
+.success-title {
+  font-size: 44rpx;
+  font-weight: bold;
+  color: var(--gray-900);
+  margin-bottom: 12rpx;
+}
+
+.success-subtitle {
+  font-size: 26rpx;
+  color: var(--gray-500);
+  margin-bottom: 72rpx;
+}
+
+/* 金额展示 */
+.pay-amount {
+  display: flex;
+  align-items: baseline;
+  color: var(--gray-900);
+  font-weight: bold;
+  margin-bottom: 96rpx;
+}
+
+.amount-symbol {
+  font-size: 38rpx;
+  margin-right: 4rpx;
+}
+
+.amount-val {
+  font-size: 64rpx;
+}
+
+/* 操作按钮 */
+.action-buttons-wrap {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.view-order-btn {
+  width: 100% !important;
+  font-size: 30rpx;
+  padding: 24rpx 0;
+}
+
+.back-home-btn {
+  width: 100% !important;
+  font-size: 30rpx;
+  padding: 24rpx 0;
+}

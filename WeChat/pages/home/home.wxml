@@ -1,0 +1,92 @@
+<!-- pages/home/home.wxml -->
+<!-- 自定义顶部导航头 -->
+<view class="custom-navbar" style="padding-top: {{statusBarHeight}}px; height: {{navBarHeight}}px;">
+  <view class="location-bar" bindtap="goToAddresses">
+    <view class="location-icon-wrap">
+      <view class="pin-icon"></view>
+    </view>
+    <text class="location-text">科技园大厦 A座</text>
+    <view class="arrow-down-icon"></view>
+  </view>
+</view>
+<!-- 占位防止内容被遮挡 -->
+<view style="height: {{totalNavHeight}}px;"></view>
+
+<scroll-view scroll-y class="home-scroll-container">
+  <!-- 搜索栏 -->
+  <view class="search-box-wrap" bindtap="goToSearch">
+    <view class="search-box">
+      <icon type="search" size="16" class="search-icon"></icon>
+      <text>搜索菜品、套餐、商家</text>
+      <view class="search-btn">搜索</view>
+    </view>
+  </view>
+
+  <view class="home-content">
+    <!-- 横幅 Banner -->
+    <view class="banner" bindtap="goToMenu">
+      <view class="banner-left">
+        <view class="banner-title">今日美味推荐</view>
+        <view class="banner-subtitle">领券下单满 30 减 5</view>
+        <view class="banner-btn">立即点餐</view>
+      </view>
+      <view class="banner-food">🍔</view>
+    </view>
+
+    <!-- 分类金刚区 -->
+    <view class="category-grid">
+      <view class="category-item" wx:for="{{categories}}" wx:key="id" bindtap="selectCategory" data-name="{{item.name}}">
+        <view class="category-icon" style="background-color: {{item.bg}};">{{item.icon}}</view>
+        <text>{{item.name}}</text>
+      </view>
+    </view>
+
+    <!-- 今日推荐 -->
+    <view class="section">
+      <view class="section-title">
+        <text class="section-title-main">今日推荐</text>
+        <view class="section-title-more" bindtap="goToMenu">
+          <text>查看更多</text>
+          <view class="arrow-right"></view>
+        </view>
+      </view>
+      <scroll-view scroll-x class="recommend-scroll hide-scroll">
+        <view class="recommend-card" wx:for="{{recommendFoods}}" wx:key="id" bindtap="goToFoodDetail" data-id="{{item.id}}">
+          <image src="{{item.image}}" mode="aspectFill" class="recommend-img" />
+          <view class="recommend-info">
+            <view class="recommend-name line-clamp-1">{{item.name}}</view>
+            <view class="recommend-desc line-clamp-1">{{item.desc}}</view>
+            <view class="recommend-foot">
+              <view class="recommend-price">
+                <text class="recommend-price-num">{{item.price}}</text>
+              </view>
+              <view class="plus-btn" catchtap="quickAdd" data-item="{{item}}">+</view>
+            </view>
+          </view>
+        </view>
+      </scroll-view>
+    </view>
+
+    <!-- 热销榜单 -->
+    <view class="section">
+      <view class="section-title">
+        <view class="section-title-main-wrap">
+          <view class="fire-icon">🔥</view>
+          <text class="section-title-main">热销榜单</text>
+        </view>
+      </view>
+      <view class="card sales-card">
+        <view class="sales-item" wx:for="{{foods}}" wx:key="id" bindtap="goToFoodDetail" data-id="{{item.id}}">
+          <view class="rank-badge r{{index + 1}}" wx:if="{{index < 3}}">{{index + 1}}</view>
+          <image src="{{item.image}}" mode="aspectFill" class="sales-img" />
+          <view class="sales-text">
+            <view class="sales-name">{{item.name}}</view>
+            <view class="sales-price">
+              <text class="sales-price-num">{{item.price}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+</scroll-view>

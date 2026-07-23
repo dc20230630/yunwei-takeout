@@ -1,0 +1,152 @@
+/* pages/profile/profile.wxss */
+.profile-container {
+  min-height: calc(100vh - 100rpx);
+  background-color: var(--gray-50);
+}
+
+/* 渐变头部 */
+.profile-head-wrap {
+  background: linear-gradient(135deg, #fb923c, #ff6b21);
+  padding: 30rpx 40rpx 80rpx;
+  border-radius: 0 0 60rpx 60rpx;
+  position: relative;
+  overflow: hidden;
+}
+
+.profile-head-wrap::after {
+  content: "";
+  position: absolute;
+  width: 300rpx;
+  height: 300rpx;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.08);
+  right: -100rpx;
+  top: -80rpx;
+  z-index: 1;
+}
+
+.profile-user {
+  display: flex;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+}
+
+.user-avatar {
+  width: 130rpx;
+  height: 130rpx;
+  border-radius: 50%;
+  border: 6rpx solid rgba(255, 255, 255, 0.35);
+  margin-right: 28rpx;
+  background-color: var(--gray-100);
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-name {
+  font-size: 38rpx;
+  font-weight: bold;
+  color: #ffffff;
+  margin-bottom: 12rpx;
+}
+
+.user-phone {
+  font-size: 24rpx;
+  color: #ffe2d1;
+}
+
+/* 统计资产面板 */
+.profile-stats-card {
+  margin: -40rpx 30rpx 0;
+  position: relative;
+  z-index: 5;
+  padding: 36rpx 20rpx;
+}
+
+.profile-stats {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+
+.profile-stat {
+  flex: 1;
+  text-align: center;
+  border-right: 1rpx solid var(--gray-100);
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.stat-num {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: var(--gray-900);
+}
+
+.stat-label {
+  font-size: 22rpx;
+  color: var(--gray-500);
+}
+
+/* 功能菜单列表 */
+.profile-menu {
+  margin: 30rpx 30rpx 0;
+  padding: 10rpx 0;
+  overflow: hidden;
+}
+
+.profile-item {
+  height: 110rpx;
+  display: flex;
+  align-items: center;
+  padding: 0 30rpx;
+  border-bottom: 1rpx solid var(--gray-100);
+}
+
+.profile-item:last-child {
+  border-bottom: none;
+}
+
+.menu-icon {
+  font-size: 38rpx;
+  margin-right: 24rpx;
+}
+
+.menu-title {
+  flex: 1;
+  font-size: 28rpx;
+  color: var(--gray-700);
+}
+
+.arrow-right {
+  width: 14rpx;
+  height: 14rpx;
+  border-top: 3rpx solid var(--gray-300);
+  border-right: 3rpx solid var(--gray-300);
+  transform: rotate(45deg);
+}
+
+/* 退出登录 */
+.logout-btn-wrap {
+  margin: 60rpx 30rpx 0;
+}
+
+.logout-btn {
+  width: 100% !important;
+  color: var(--red) !important;
+  border-color: var(--gray-200) !important;
+  font-size: 30rpx;
+}
+
+/* 版本标 */
+.version-label {
+  text-align: center;
+  font-size: 22rpx;
+  color: var(--gray-400);
+  margin-top: 60rpx;
+  padding-bottom: 80rpx;
+}

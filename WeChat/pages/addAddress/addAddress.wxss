@@ -1,0 +1,141 @@
+/* pages/addAddress/addAddress.wxss */
+.form-container {
+  min-height: calc(100vh - 100rpx);
+  background-color: var(--gray-50);
+  padding: 30rpx 24rpx;
+}
+
+.form-card {
+  padding: 10rpx 30rpx;
+  margin-bottom: 48rpx;
+}
+
+.form-row {
+  min-height: 110rpx;
+  display: flex;
+  align-items: center;
+  border-bottom: 1rpx solid var(--gray-100);
+  font-size: 28rpx;
+}
+
+.form-row:last-child {
+  border-bottom: none;
+}
+
+.row-label {
+  width: 160rpx;
+  color: var(--gray-700);
+  font-weight: bold;
+}
+
+.row-input {
+  flex: 1;
+  height: 80rpx;
+  background-color: transparent;
+  font-size: 28rpx;
+}
+
+/* 性别选择 */
+.sex-row {
+  min-height: 80rpx;
+  border-bottom: 1rpx solid var(--gray-100);
+}
+
+.sex-options {
+  display: flex;
+  gap: 24rpx;
+}
+
+.sex-option {
+  border: 1rpx solid var(--gray-300);
+  border-radius: 12rpx;
+  padding: 12rpx 36rpx;
+  font-size: 24rpx;
+  color: var(--gray-600);
+  background-color: #ffffff;
+}
+
+.sex-option.active {
+  background-color: var(--orange-soft);
+  color: var(--orange);
+  border-color: var(--orange);
+  font-weight: bold;
+}
+
+/* 地址选择器 */
+.row-picker-wrap {
+  flex: 1;
+  height: 80rpx;
+  display: flex;
+  align-items: center;
+}
+
+.picker-val {
+  font-size: 28rpx;
+  color: var(--gray-900);
+}
+
+.picker-val.placeholder {
+  color: var(--gray-400);
+}
+
+.arrow-right {
+  width: 14rpx;
+  height: 14rpx;
+  border-top: 3rpx solid var(--gray-300);
+  border-right: 3rpx solid var(--gray-300);
+  transform: rotate(45deg);
+}
+
+/* 标签选项 */
+.tag-options {
+  display: flex;
+  gap: 20rpx;
+}
+
+.tag-option {
+  border: 1rpx solid var(--gray-200);
+  padding: 10rpx 32rpx;
+  border-radius: 999rpx;
+  font-size: 22rpx;
+  color: var(--gray-600);
+  background-color: var(--gray-50);
+}
+
+.tag-option.active {
+  background-color: var(--orange-soft);
+  color: var(--orange);
+  border-color: var(--orange);
+  font-weight: bold;
+}
+
+/* 默认开关 */
+.default-row {
+  justify-content: space-between;
+}
+
+.default-switch {
+  transform: scale(0.9);
+}
+
+/* 保存与删除 */
+.submit-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+  padding: 0 10rpx;
+}
+
+.save-btn {
+  width: 100% !important;
+  font-size: 30rpx;
+  padding: 24rpx 0;
+}
+
+.delete-btn {
+  width: 100% !important;
+  font-size: 30rpx;
+  padding: 24rpx 0;
+  color: var(--red) !important;
+  border-color: var(--gray-200) !important;
+}

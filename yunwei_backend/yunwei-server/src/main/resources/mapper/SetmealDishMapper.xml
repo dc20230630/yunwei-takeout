@@ -15,4 +15,29 @@
         </foreach>
     </select>
 
+    <insert id="insertBatch">
+        INSERT INTO setmeal_dish (setmeal_id, dish_id, name, price, copies)
+        VALUES
+        <foreach collection="setmealDishes" item="setmealDish" separator=",">
+            (#{setmealDish.setmealId}, #{setmealDish.dishId}, #{setmealDish.name},
+             #{setmealDish.price}, #{setmealDish.copies})
+        </foreach>
+    </insert>
+
+    <delete id="deleteBySetmealIds">
+        DELETE FROM setmeal_dish
+        WHERE setmeal_id IN
+        <foreach collection="setmealIds" item="setmealId" open="(" separator="," close=")">
+            #{setmealId}
+        </foreach>
+    </delete>
+
+    <select id="countDisabledDishBySetmealId" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM setmeal_dish sd
+        INNER JOIN dish d ON sd.dish_id = d.id
+        WHERE sd.setmeal_id = #{setmealId}
+          AND d.status = #{status}
+    </select>
+
 </mapper>

@@ -1,0 +1,62 @@
+{
+  "pages": [
+    "pages/login/login",
+    "pages/home/home",
+    "pages/orderList/orderList",
+    "pages/profile/profile",
+    "pages/search/search",
+    "pages/menu/menu",
+    "pages/itemDetail/itemDetail",
+    "pages/checkout/checkout",
+    "pages/paySuccess/paySuccess",
+    "pages/orderDetail/orderDetail",
+    "pages/addresses/addresses",
+    "pages/addAddress/addAddress",
+    "pages/review/review"
+  ],
+  "window": {
+    "navigationBarTextStyle": "black",
+    "navigationStyle": "custom"
+  },
+  "tabBar": {
+    "color": "#8a8a8a",
+    "selectedColor": "#ff6b21",
+    "borderStyle": "white",
+    "backgroundColor": "#ffffff",
+    "list": [
+      {
+        "pagePath": "pages/home/home",
+        "text": "首页",
+        "iconPath": "assets/tabbar/home_normal.png",
+        "selectedIconPath": "assets/tabbar/home_active.png"
+      },
+      {
+        "pagePath": "pages/orderList/orderList",
+        "text": "订单",
+        "iconPath": "assets/tabbar/order_normal.png",
+        "selectedIconPath": "assets/tabbar/order_active.png"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "text": "我的",
+        "iconPath": "assets/tabbar/my_normal.png",
+        "selectedIconPath": "assets/tabbar/my_active.png"
+      }
+    ]
+  },
+  "style": "v2",
+  "renderer": "skyline",
+  "rendererOptions": {
+    "skyline": {
+      "defaultDisplayBlock": true,
+      "defaultContentBox": true,
+      "tagNameStyleIsolation": "legacy",
+      "disableABTest": true,
+      "sdkVersionBegin": "3.0.0",
+      "sdkVersionEnd": "15.255.255"
+    }
+  },
+  "componentFramework": "glass-easel",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

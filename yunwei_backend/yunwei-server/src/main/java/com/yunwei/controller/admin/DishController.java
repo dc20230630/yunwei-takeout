@@ -12,9 +12,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * 菜品管理接口。
@@ -27,6 +29,16 @@ import java.util.List;
 public class DishController {
     private final DishService dishService;
 
+    private final RedisTemplate redisTemplate;
+
+    /**
+     * 菜品发生变化后，清理所有用户端菜品分类缓存。
+     */
+    private void clearDishCache(Long categoryId) {
+        Set<String> keys = redisTemplate.keys("dish_" + categoryId);
+        redisTemplate.delete(keys);
+    }
+
     /**
      * 新增菜品及其口味。
      */
@@ -35,6 +47,8 @@ public class DishController {
     public Result save(@RequestBody @Valid DishDTO dishDTO){
         log.info("新增菜品:{}",dishDTO);
         dishService.saveWithFlavor(dishDTO);
+        Long categoryId = dishDTO.getCategoryId();
+        clearDishCache(categoryId);
         return Result.success();
     }
 
@@ -59,6 +73,8 @@ public class DishController {
             @RequestParam Long id,
             @RequestParam Integer status) {
         dishService.updateStatus(id, status);
+        Long categoryId = dishService.getByIdWithFlavor(id).getCategoryId();
+        clearDishCache(categoryId);
         return Result.success();
     }
 
@@ -71,6 +87,8 @@ public class DishController {
     @Operation(summary = "批量删除菜品")
     public Result delete(@RequestParam List<Long> ids){
         dishService.deleteBatch(ids);
+        Set<String> keys = redisTemplate.keys("dish_*");
+        redisTemplate.delete(keys);
         return Result.success();
     }
 
@@ -93,6 +111,8 @@ public class DishController {
     @Operation(summary = "修改菜品")
     public Result<Void> update(@RequestBody @Valid DishUpdateDTO dishUpdateDTO) {
         dishService.updateWithFlavor(dishUpdateDTO);
+        Set<String> keys = redisTemplate.keys("dish_*");
+        redisTemplate.delete(keys);
         return Result.success();
     }
 }

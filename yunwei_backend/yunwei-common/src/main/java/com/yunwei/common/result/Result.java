@@ -1,6 +1,9 @@
 package com.yunwei.common.result;
 
-public record Result<T>(Integer code, String message, T data) {
+import java.io.Serializable;
+
+public record Result<T>(Integer code, String message, T data) implements Serializable{
+    private static final long serialVersionUID = 1L;
 
     //当成功时，返回结果  一般用于获取数据
     public static <T> Result<T> success(T data) {

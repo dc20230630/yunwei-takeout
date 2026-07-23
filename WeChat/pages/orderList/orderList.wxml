@@ -1,0 +1,102 @@
+<!-- pages/orderList/orderList.wxml -->
+<!-- 自定义顶部栏 -->
+<view class="custom-navbar" style="padding-top: {{statusBarHeight}}px; height: {{navBarHeight}}px;">
+  <view class="custom-navbar-title">我的订单</view>
+</view>
+<view style="height: {{totalNavHeight}}px;"></view>
+
+<view class="order-container">
+  <!-- Tab 切换栏 -->
+  <view class="order-tabs-wrap">
+    <view class="order-tabs">
+      <view 
+        class="order-tab {{selectedTab === item ? 'active' : ''}}" 
+        wx:for="{{tabs}}" 
+        wx:key="*this"
+        bindtap="switchTab" 
+        data-tab="{{item}}"
+      >
+        {{item}}
+      </view>
+    </view>
+  </view>
+
+  <!-- 订单列表主体 -->
+  <scroll-view scroll-y class="order-scroll-list hide-scroll">
+    <view class="order-list-content" wx:if="{{filteredOrders.length > 0}}">
+      <view class="order-card card" wx:for="{{filteredOrders}}" wx:key="id" bindtap="goToOrderDetail" data-id="{{item.id}}">
+        <!-- 头部信息 -->
+        <view class="order-head">
+          <view class="merchant-name-wrap">
+            <text class="merchant-name">云味甄选（科技园店）</text>
+          </view>
+          <text class="order-status {{item.status === '已取消' ? 'cancelled' : ''}}">{{item.status}}</text>
+        </view>
+
+        <!-- 订单内容 -->
+        <view class="order-middle">
+          <view class="order-pics">
+            <image 
+              wx:for="{{item.items}}" 
+              wx:for-item="food" 
+              wx:key="id" 
+              src="{{food.image || 'https://images.unsplash.com/photo-1585032226651-759b368d7246?auto=format&fit=crop&w=100&q=80'}}" 
+              mode="aspectFill" 
+              class="order-food-img"
+            />
+          </view>
+          <view class="order-summary">
+            <view class="order-total-price">¥{{item.total}}</view>
+            <view class="order-qty">共{{item.items.length}}件</view>
+          </view>
+        </view>
+
+        <!-- 订单底部时间及操作 -->
+        <view class="order-foot">
+          <text class="order-time">{{item.time}}</text>
+          <view class="order-actions" catchtap="preventBubble">
+            <button 
+              class="action-btn outline-small" 
+              wx:if="{{item.status === '已完成'}}" 
+              bindtap="goToReview" 
+              data-id="{{item.id}}"
+            >
+              评价
+            </button>
+            <button 
+              class="action-btn solid-small" 
+              wx:if="{{item.status === '已完成' || item.status === '已取消'}}" 
+              bindtap="reorder" 
+              data-order="{{item}}"
+            >
+              再来一单
+            </button>
+            <button 
+              class="action-btn orange-small" 
+              wx:if="{{item.status === '待付款'}}" 
+              bindtap="payOrder" 
+              data-id="{{item.id}}"
+            >
+              去支付
+            </button>
+            <button 
+              class="action-btn outline-small" 
+              wx:if="{{item.status === '待接单' || item.status === '制作中' || item.status === '配送中'}}" 
+              bindtap="urgeOrder" 
+              data-id="{{item.id}}"
+            >
+              催单
+            </button>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 暂无订单缺省页 -->
+    <view class="empty-orders" wx:else>
+      <view class="empty-icon">📂</view>
+      <text class="empty-text">您还没有相关订单</text>
+      <button class="primary-btn empty-btn" bindtap="goToMenu">去点一单</button>
+    </view>
+  </scroll-view>
+</view>
