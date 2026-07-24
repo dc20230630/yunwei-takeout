@@ -62,7 +62,10 @@ Page({
     app.registerCartCallback(this.onCartUpdated);
   },
 
-  onShow() {
+  async onShow() {
+    // 重新进入菜单时读取数据库，避免本地缓存不是最新状态
+    await app.loadCart();
+
     // 每次显示页面更新右侧菜品显示并刷新购物车
     this.updateFilteredFoods();
     this.onCartUpdated(app.globalData.cart);
@@ -129,17 +132,17 @@ Page({
   },
 
   // --- 购物车交互 (无规格菜品直接加减) ---
-  increaseQtyDirect(e) {
+  async increaseQtyDirect(e) {
     const food = e.currentTarget.dataset.food;
-    app.addToCart(food, null, 1);
+    await app.addToCart(food, null, 1);
   },
 
-  decreaseQtyDirect(e) {
+  async decreaseQtyDirect(e) {
     const food = e.currentTarget.dataset.food;
     // 查找购物车内该无规格商品的项
     const cartItem = this.data.cart.find(x => x.id === food.id && x.specs === null);
     if (cartItem) {
-      app.changeCartQty(cartItem.cartId, -1);
+      await app.changeCartQty(cartItem.cartId, -1);
     }
   },
 
@@ -156,22 +159,26 @@ Page({
     wx.showModal({
       title: '清空确认',
       content: '确定要清空购物车吗？',
-      success: (res) => {
+      success: async (res) => {
         if (res.confirm) {
-          app.clearCart();
+          await app.clearCart();
+          wx.showToast({
+            title: '购物车已清空',
+            icon: 'success'
+          });
         }
       }
     });
   },
 
-  increaseCartQty(e) {
+  async increaseCartQty(e) {
     const cartId = e.currentTarget.dataset.cartid;
-    app.changeCartQty(cartId, 1);
+    await app.changeCartQty(cartId, 1);
   },
 
-  decreaseCartQty(e) {
+  async decreaseCartQty(e) {
     const cartId = e.currentTarget.dataset.cartid;
-    app.changeCartQty(cartId, -1);
+    await app.changeCartQty(cartId, -1);
   },
 
   // --- 多规格选择逻辑 ---
@@ -242,7 +249,7 @@ Page({
     this.setData({ flavorGroups });
   },
 
-  addSpecFoodToCart() {
+  async addSpecFoodToCart() {
     const { specFood, flavorGroups } = this.data;
     const specs = {};
 
@@ -253,7 +260,7 @@ Page({
       }
     });
 
-    app.addToCart(specFood, Object.keys(specs).length > 0 ? specs : null, 1);
+    await app.addToCart(specFood, Object.keys(specs).length > 0 ? specs : null, 1);
     this.closeSpecs();
   },
 

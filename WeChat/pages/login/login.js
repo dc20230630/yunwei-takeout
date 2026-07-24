@@ -116,6 +116,7 @@ Page({
 
     app.globalData.userInfo = userInfo;
     wx.setStorageSync('userInfo', userInfo);
+    
 
     wx.showToast({
       title: '登录成功',
@@ -173,6 +174,7 @@ Page({
 
       // Token 用于后续需要登录状态的用户端接口
       wx.setStorageSync('token', userLoginVO.token);
+      await app.loadCart();
 
       const userInfo = {
         id: userLoginVO.id,

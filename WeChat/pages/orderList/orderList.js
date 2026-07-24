@@ -83,13 +83,13 @@ Page({
   },
 
   // 再来一单 (Reorder)
-  reorder(e) {
+  async reorder(e) {
     const order = e.currentTarget.dataset.order;
     // 1. 清空当前购物车
-    app.clearCart();
+    await app.clearCart();
     
-    // 2. 将订单中的全部商品塞入全局购物车
-    order.items.forEach(item => {
+    // forEach 不会等待内部 await，必须按顺序加入，全部成功后才能提示完成
+    for (const item of order.items) {
       // 在本地 foods 库中查找到对应完整信息补全属性 (主要是为了获取图片等描述)
       const originFood = app.globalData.foods.find(f => f.id === item.id) || {};
       const newFood = {
@@ -98,8 +98,8 @@ Page({
         id: item.id,
         name: item.name
       };
-      app.addToCart(newFood, item.specs, item.qty);
-    });
+      await app.addToCart(newFood, item.specs, item.qty);
+    }
 
     wx.showToast({
       title: '已添加进购物车',

@@ -50,7 +50,9 @@ Page({
     app.registerCartCallback(this.onCartUpdated);
   },
 
-  onShow() {
+  async onShow() {
+    // 从数据库同步后，再计算当前商品在购物车中的数量
+    await app.loadCart();
     // 显示页面时刷新购物车状态
     this.onCartUpdated(app.globalData.cart);
   },
@@ -77,16 +79,16 @@ Page({
   },
 
   // 快捷加减车（针对无规格菜品）
-  increaseQtyDirect() {
-    app.addToCart(this.data.food, null, 1);
+  async increaseQtyDirect() {
+    await app.addToCart(this.data.food, null, 1);
   },
 
-  decreaseQtyDirect() {
+  async decreaseQtyDirect() {
     const { cart, food } = this.data;
     // 查找购物车中该商品的无规格项
     const cartItem = app.globalData.cart.find(x => x.id === food.id && x.specs === null);
     if (cartItem) {
-      app.changeCartQty(cartItem.cartId, -1);
+      await app.changeCartQty(cartItem.cartId, -1);
     }
   },
 
@@ -132,7 +134,7 @@ Page({
     this.setData({ flavorGroups });
   },
 
-  addSpecFoodToCart() {
+  async addSpecFoodToCart() {
     const { food, flavorGroups } = this.data;
     const specs = {};
 
@@ -141,7 +143,7 @@ Page({
       specs[group.name] = selectedOption.value;
     });
 
-    app.addToCart(food, specs, 1);
+    await app.addToCart(food, specs, 1);
     this.closeSpecs();
     wx.showToast({
       title: '已加入购物车',

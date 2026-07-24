@@ -21,9 +21,9 @@ Page({
     });
   },
 
-  onShow() {
-    // 重新加载全局地址列表，确保从编辑/新增页返回时同步更新
-    const addresses = app.globalData.addresses || [];
+  async onShow() {
+    // 每次展示都从后端查询，确保新增、编辑和删除后的列表是最新数据。
+    const addresses = await app.loadAddresses();
     
     // 如果是从结算页跳来的，获取结算页当前选中的地址id用于高亮勾选
     let selectedId = 0;

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yunwei.mapper.ShoppingCartMapper">
+    <insert id="insert">
+        insert into shopping_cart(name, image, user_id, dish_id, setmeal_id, dish_flavor, number, amount, create_time)
+        values (#{name}, #{image}, #{userId}, #{dishId}, #{setmealId},
+                 #{dishFlavor}, #{number}, #{amount}, #{createTime})
+    </insert>
+
+    <select id="findOne" resultType="com.yunwei.pojo.entity.ShoppingCart">
+        select id,
+               name,
+               image,
+               user_id     as userId,
+               setmeal_id  AS setmealId,
+               dish_flavor AS dishFlavor,
+               number,
+               amount,
+               create_time AS createTime
+        from shopping_cart where user_id = #{userId}
+        <choose>
+            <when test="dishId != null">
+                and dish_id = #{dishId}
+            </when>
+            <otherwise>
+                and setmeal_id = #{setmealId}
+            </otherwise>
+        </choose>
+        <choose>
+            <when test="dishFlavor != null">
+                and dish_flavor = #{dishFlavor}
+            </when>
+            <otherwise>
+                and dish_flavor is null
+            </otherwise>
+        </choose>
+    </select>
+
+
+    <select id="list" resultType="com.yunwei.pojo.entity.ShoppingCart">
+        SELECT id, name, image,
+               user_id AS userId,
+               dish_id AS dishId,
+               setmeal_id AS setmealId,
+               dish_flavor AS dishFlavor,
+               number, amount,
+               create_time AS createTime
+        FROM shopping_cart
+        WHERE user_id = #{userId}
+        ORDER BY create_time DESC, id DESC
+    </select>
+
+
+    <update id="updateNumberById">
+        update shopping_cart set number = #{number} where id = #{id}
+    </update>
+
+    <select id="getByIdAndUserId" resultType="com.yunwei.pojo.entity.ShoppingCart">
+        select id, number
+        from shopping_cart
+        where id = #{id} and user_id = #{userId}
+    </select>
+
+    <delete id="deleteByIdAndUserId">
+        delete from shopping_cart
+        where id = #{id} and user_id = #{userId}
+    </delete>
+</mapper>

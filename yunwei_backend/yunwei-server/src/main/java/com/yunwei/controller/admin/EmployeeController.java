@@ -84,7 +84,6 @@ public class EmployeeController {
     @GetMapping
     @Operation(summary = "查询员工列表")
     public Result<PageResult<EmployeeListVo>> list(@RequestParam Integer page,@RequestParam Integer pageSize) {
-
         PageResult<EmployeeListVo> pageResult = employeeService.list(page,pageSize);
         return Result.success(pageResult);
     }

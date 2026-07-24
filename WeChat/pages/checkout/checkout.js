@@ -26,14 +26,16 @@ Page({
     });
   },
 
-  onShow() {
+  async onShow() {
     // 1. 读取购物车
     const cart = app.globalData.cart || [];
+
+    const addresses = await app.loadAddresses();
     
     // 2. 匹配地址逻辑：若已全局暂存当前选择的地址则直接用，否则在地址库中寻找默认地址
     let address = app.globalData.currentAddress;
-    if (!address && app.globalData.addresses.length > 0) {
-      address = app.globalData.addresses.find(addr => addr.isDefault) || app.globalData.addresses[0];
+    if (!address && addresses.length > 0) {
+      address = addresses.find(addr => addr.isDefault) || addresses[0];
       app.globalData.currentAddress = address;
     }
 
@@ -84,7 +86,7 @@ Page({
     });
 
     // 模拟 1.2 秒支付网络耗时
-    setTimeout(() => {
+    setTimeout(async () => {
       wx.hideLoading();
 
       // 1. 创建订单数据对象
@@ -114,8 +116,8 @@ Page({
       // 2. 将新订单存入全局列表的顶端 (最先展示)
       app.globalData.orders.unshift(newOrder);
 
-      // 3. 清空全局购物车
-      app.clearCart();
+      // 3. 后端清空成功后，才能跳转到支付成功页
+      await app.clearCart();
 
       // 4. 重定向去成功支付页面 (避免用户按返回键重复提交)
       wx.redirectTo({

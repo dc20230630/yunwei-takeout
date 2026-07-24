@@ -53,7 +53,7 @@ Page({
   },
 
   // 快捷添加到购物车
-  quickAdd(e) {
+  async quickAdd(e) {
     const item = e.currentTarget.dataset.item;
     if (item.hasSpecs) {
       // 含有规格的菜品，跳转到点餐页进行选配
@@ -62,7 +62,7 @@ Page({
       });
     } else {
       // 无规格菜品直接调用全局加车
-      app.addToCart(item, null, 1);
+      await app.addToCart(item, null, 1);
       wx.showToast({
         title: '已加入购物车',
         icon: 'success',

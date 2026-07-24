@@ -24,33 +24,29 @@ Page({
     tagOptions: ['家', '公司', '学校']
   },
 
-  onLoad(options) {
+  async onLoad(options) {
     this.setData({
       statusBarHeight: app.globalData.statusBarHeight,
       navBarHeight: app.globalData.navBarHeight,
       totalNavHeight: app.globalData.totalNavHeight
     });
 
-    // 检查是否为编辑模式
+    // 编辑时按主键查询，避免依赖地址列表页是否已经加载过数据。
     if (options.id) {
       const id = parseInt(options.id);
-      const address = app.globalData.addresses.find(a => a.id === id);
-      if (address) {
-        // 根据原有数据拆分 region 数组，供 picker 展示
-        const regionArray = address.region.split(' ');
-        this.setData({
-          isEditMode: true,
-          addressId: id,
-          name: address.name,
-          gender: address.gender || '先生',
-          phone: address.phone,
-          region: address.region,
-          regionArray: regionArray.length === 3 ? regionArray : ['广东省', '深圳市', '南山区'],
-          detail: address.detail,
-          tag: address.tag,
-          isDefault: address.isDefault
-        });
-      }
+      const address = await app.getAddressById(id);
+      this.setData({
+        isEditMode: true,
+        addressId: id,
+        name: address.name,
+        gender: address.gender,
+        phone: address.phone,
+        region: address.region,
+        regionArray: address.regionArray,
+        detail: address.detail,
+        tag: address.tag,
+        isDefault: address.isDefault
+      });
     }
   },
 
@@ -79,8 +75,8 @@ Page({
   },
 
   // 保存地址逻辑
-  saveAddress() {
-    const { name, gender, phone, region, detail, tag, isDefault, isEditMode, addressId } = this.data;
+  async saveAddress() {
+    const { name, gender, phone, detail, tag, isDefault, isEditMode, addressId } = this.data;
 
     // 表单合法性验证
     if (!name) {
@@ -91,7 +87,7 @@ Page({
       wx.showToast({ title: '请填写11位手机号', icon: 'none' });
       return;
     }
-    if (!region) {
+    if (!this.data.region) {
       wx.showToast({ title: '请选择收货地址', icon: 'none' });
       return;
     }
@@ -100,47 +96,29 @@ Page({
       return;
     }
 
-    const addresses = app.globalData.addresses || [];
-
-    // 排他机制：如果要将当前地址设为默认，则先将其他地址改为非默认
-    if (isDefault) {
-      addresses.forEach(addr => addr.isDefault = false);
-    }
-
-    const newAddressData = {
-      id: isEditMode ? addressId : Date.now(),
+    const address = {
+      id: addressId,
       name,
       gender,
       phone,
-      region,
+      regionArray: this.data.regionArray,
       detail,
       tag,
       isDefault
     };
 
     if (isEditMode) {
-      // 1. 编辑已有地址
-      const index = addresses.findIndex(a => a.id === addressId);
-      if (index !== -1) {
-        addresses[index] = newAddressData;
-      }
-      
-      // 同步更新结算页正在选用的地址缓存
-      if (app.globalData.currentAddress && app.globalData.currentAddress.id === addressId) {
-        app.globalData.currentAddress = newAddressData;
-      }
+      await app.updateAddress(address);
     } else {
-      // 2. 新建地址
-      addresses.push(newAddressData);
-      
-      // 如果之前地址库为空，或者新设为了默认，直接将其设为当前结算首选地址
-      if (addresses.length === 1 || isDefault) {
-        app.globalData.currentAddress = newAddressData;
-      }
+      await app.saveAddress(address);
     }
 
-    app.globalData.addresses = addresses;
-    wx.setStorageSync('addresses', addresses);
+    if (isDefault) {
+      // 新增或修改为默认地址后，使用后端重新查询到的默认记录作为结算地址。
+      app.globalData.currentAddress = app.globalData.addresses.find(item => item.isDefault);
+    } else if (!isEditMode && app.globalData.addresses.length === 1) {
+      app.globalData.currentAddress = app.globalData.addresses[0];
+    }
 
     wx.showToast({
       title: isEditMode ? '修改成功' : '保存成功',
@@ -158,19 +136,10 @@ Page({
     wx.showModal({
       title: '删除确认',
       content: '确定要删除该收货地址吗？',
-      success: (res) => {
+      success: async (res) => {
         if (res.confirm) {
           const { addressId } = this.data;
-          let addresses = app.globalData.addresses || [];
-          addresses = addresses.filter(a => a.id !== addressId);
-          
-          app.globalData.addresses = addresses;
-          wx.setStorageSync('addresses', addresses);
-
-          // 级联处理：如果被删地址是当前结算选用的地址，清空它，避免结算页拉取异常
-          if (app.globalData.currentAddress && app.globalData.currentAddress.id === addressId) {
-            app.globalData.currentAddress = null;
-          }
+          await app.deleteAddress(addressId);
 
           wx.showToast({
             title: '删除成功',
