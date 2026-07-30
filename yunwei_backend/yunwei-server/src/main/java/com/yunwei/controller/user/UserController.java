@@ -3,9 +3,11 @@ package com.yunwei.controller.user;
 import com.yunwei.common.result.Result;
 import com.yunwei.config.JwtProperties;
 import com.yunwei.pojo.dto.UserLoginDTO;
+import com.yunwei.pojo.dto.UserProfileDTO;
 import com.yunwei.pojo.entity.User;
 import com.yunwei.pojo.vo.UserLoginVO;
 import com.yunwei.service.UserService;
+import com.yunwei.utils.AliOssUtil;
 import com.yunwei.utils.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -16,9 +18,15 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 @Slf4j
 @RestController
@@ -29,6 +37,7 @@ public class UserController {
 
     private final UserService userService;
     private final JwtProperties jwtProperties;
+    private final AliOssUtil aliOssUtil;
 
     @PostMapping("/login")
     @Operation(summary = "微信登录")
@@ -48,8 +57,27 @@ public class UserController {
         UserLoginVO userLoginVO  = UserLoginVO.builder()
                 .id(user.getId())
                 .openid(user.getOpenid())
+                .name(user.getName())
+                .avatar(user.getAvatar())
                 .token(token)
                 .build();
         return Result.success(userLoginVO);
     }
+
+    @PostMapping("/avatar")
+    @Operation(summary = "上传用户头像")
+    public Result<String> uploadAvatar(@RequestParam("file") MultipartFile file) throws IOException {
+        String originalFilename = file.getOriginalFilename();
+        String suffix = originalFilename.substring(originalFilename.lastIndexOf("."));
+        String datePath = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
+        String objectName = "avatar/" + datePath + "/" + UUID.randomUUID() + suffix;
+        return Result.success(aliOssUtil.upload(file.getBytes(), objectName));
+    }
+
+    @PostMapping("/profile")
+    @Operation(summary = "保存用户头像和昵称")
+    public Result<User> updateProfile(@RequestBody @Valid UserProfileDTO userProfileDTO) {
+        return Result.success(userService.updateProfile(userProfileDTO));
+    }
+
 }

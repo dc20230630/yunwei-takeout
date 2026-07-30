@@ -5,6 +5,19 @@
 
 <mapper namespace="com.yunwei.mapper.UserMapper">
 
+    <select id="getById" resultType="com.yunwei.pojo.entity.User">
+        select id,
+               openid,
+               name,
+               phone,
+               sex,
+               id_number,
+               avatar,
+               create_time
+        from user
+        where id = #{id}
+    </select>
+
     <select id="getByOpenid" resultType="com.yunwei.pojo.entity.User">
         select id,
                openid,
@@ -22,5 +35,12 @@
         insert into user (openid, create_time)
         values (#{openid}, #{createTime})
     </insert>
+
+    <update id="updateProfile">
+        update user
+        set name = #{name},
+            avatar = #{avatar}
+        where id = #{id}
+    </update>
 
 </mapper>

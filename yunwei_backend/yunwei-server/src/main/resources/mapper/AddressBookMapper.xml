@@ -21,6 +21,15 @@
         </where>
     </select>
 
+
+    <select id="getByIdAndUserId" resultType="com.yunwei.pojo.entity.AddressBook">
+        select *
+        from address_book
+        where id = #{id}
+          and user_id = #{userId}
+
+    </select>
+
     <update id="update">
         update address_book
         <set>

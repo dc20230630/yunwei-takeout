@@ -68,9 +68,27 @@
         <text class="split-text">其他方式登录</text>
         <view class="split-line"></view>
       </view>
-      <view class="wechat-login-btn-wrap" bindtap="wechatLogin">
+      <button class="wechat-login-btn-wrap" bindtap="wechatLogin" loading="{{wechatLoading}}">
         <view class="wechat-icon">💬</view>
-      </view>
+      </button>
     </view>
   </view>
 </scroll-view>
+
+<view class="profile-mask" wx:if="{{profileVisible}}">
+  <view class="profile-card">
+    <view class="profile-title">完善个人资料</view>
+    <button class="avatar-picker" open-type="chooseAvatar" bindchooseavatar="chooseAvatar">
+      <image wx:if="{{avatarUrl}}" class="avatar-image" src="{{avatarUrl}}" mode="aspectFill" />
+      <view wx:else class="avatar-placeholder">选择头像</view>
+    </button>
+    <input
+      class="nickname-input"
+      type="nickname"
+      placeholder="请输入昵称"
+      value="{{nickname}}"
+      bindinput="onNicknameInput"
+    />
+    <button class="primary-btn profile-submit-btn" bindtap="saveProfile">保存并登录</button>
+  </view>
+</view>

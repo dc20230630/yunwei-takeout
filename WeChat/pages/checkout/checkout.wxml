@@ -49,6 +49,66 @@
         </view>
       </view>
 
+      <!-- 下单选项只提交用户选择，商品和金额由后端重新计算 -->
+      <view class="checkout-card order-option-card">
+        <view class="option-title">下单信息</view>
+
+        <view class="option-row">
+          <text class="option-label">支付方式</text>
+          <text class="option-value">微信支付</text>
+        </view>
+
+        <view class="option-row option-row-column">
+          <text class="option-label">配送方式</text>
+          <radio-group class="option-radio-group" bindchange="onDeliveryStatusChange">
+            <label class="option-radio">
+              <radio value="1" checked="{{deliveryStatus === 1}}" color="#f97316" />立即送出
+            </label>
+            <label class="option-radio">
+              <radio value="0" checked="{{deliveryStatus === 0}}" color="#f97316" />预约配送
+            </label>
+          </radio-group>
+        </view>
+
+        <view class="option-row option-row-column" wx:if="{{deliveryStatus === 0}}">
+          <text class="option-label">预约时间</text>
+          <view class="picker-group">
+            <picker mode="date" bindchange="onDeliveryDateChange">
+              <view class="picker-value">{{deliveryDate || '选择日期'}}</view>
+            </picker>
+            <picker mode="time" bindchange="onDeliveryTimeChange">
+              <view class="picker-value">{{deliveryTime || '选择时间'}}</view>
+            </picker>
+          </view>
+        </view>
+
+        <view class="option-row option-row-column">
+          <text class="option-label">餐具</text>
+          <radio-group class="option-radio-group" bindchange="onTablewareStatusChange">
+            <label class="option-radio">
+              <radio value="1" checked="{{tablewareStatus === 1}}" color="#f97316" />按餐量提供
+            </label>
+            <label class="option-radio">
+              <radio value="0" checked="{{tablewareStatus === 0}}" color="#f97316" />自选数量
+            </label>
+          </radio-group>
+          <view wx:if="{{tablewareStatus === 0}}" class="tableware-count-row">
+            <text class="tableware-count-label">餐具数量</text>
+            <view class="tableware-stepper">
+              <view class="stepper-button" catchtap="changeTablewareNumber" data-delta="-1">−</view>
+              <input class="tableware-input" type="number" value="{{tablewareNumber}}" bindinput="onTablewareNumberInput" />
+              <view class="stepper-button stepper-button-add" catchtap="changeTablewareNumber" data-delta="1">+</view>
+            </view>
+            <text class="tableware-unit">份</text>
+          </view>
+        </view>
+
+        <view class="option-row option-row-column option-row-last">
+          <text class="option-label">订单备注</text>
+          <textarea class="remark-input" placeholder="口味、配送等要求" maxlength="100" value="{{remark}}" bindinput="onRemarkInput" />
+        </view>
+      </view>
+
       <!-- 3. 收费明细卡片 -->
       <view class="checkout-card bill-card">
         <view class="bill-row">

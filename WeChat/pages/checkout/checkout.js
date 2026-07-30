@@ -1,16 +1,23 @@
 // pages/checkout/checkout.js
 const app = getApp();
+const { request } = require('../../utils/request');
 
 Page({
   data: {
     statusBarHeight: 0,
     navBarHeight: 0,
     totalNavHeight: 0,
-
     cart: [],
     address: null,
-    
-    // 账单明细
+    remark: '',
+    payMethod: 1,
+    // 1 为立即送出，0 为预约配送，必须和后端 OrdersSubmitDTO 保持一致
+    deliveryStatus: 1,
+    deliveryDate: '',
+    deliveryTime: '',
+    // 1 为按餐量提供，0 为用户自选数量，必须和后端 OrdersSubmitDTO 保持一致
+    tablewareStatus: 1,
+    tablewareNumber: '',
     packFee: 2.00,
     deliveryFee: 2.00,
     discount: 0.00,
@@ -18,7 +25,7 @@ Page({
     finalTotal: 0.00
   },
 
-  onLoad(options) {
+  onLoad() {
     this.setData({
       statusBarHeight: app.globalData.statusBarHeight,
       navBarHeight: app.globalData.navBarHeight,
@@ -27,103 +34,148 @@ Page({
   },
 
   async onShow() {
-    // 1. 读取购物车
     const cart = app.globalData.cart || [];
-
     const addresses = await app.loadAddresses();
-    
-    // 2. 匹配地址逻辑：若已全局暂存当前选择的地址则直接用，否则在地址库中寻找默认地址
     let address = app.globalData.currentAddress;
+
     if (!address && addresses.length > 0) {
-      address = addresses.find(addr => addr.isDefault) || addresses[0];
+      address = addresses.find(item => item.isDefault) || addresses[0];
       app.globalData.currentAddress = address;
     }
 
-    this.setData({
-      cart,
-      address
-    }, () => {
-      this.calculateBill();
-    });
+    this.setData({ cart, address }, () => this.calculateBill());
   },
 
-  // 账单金额计算
   calculateBill() {
-    const { cart, packFee, deliveryFee } = this.data;
+    const { packFee, deliveryFee } = this.data;
     const goodsTotal = app.getCartTotal();
-
-    // 满减逻辑：满 30 减 5 元，完全对接原型上的商户公告规则
     const discount = goodsTotal >= 30 ? 5.00 : 0.00;
-    
-    let finalTotal = goodsTotal + packFee + deliveryFee - discount;
-    if (finalTotal < 0) finalTotal = 0;
+    const finalTotal = Math.max(goodsTotal + packFee + deliveryFee - discount, 0);
 
     this.setData({
-      goodsTotal: parseFloat(goodsTotal.toFixed(2)),
-      discount: parseFloat(discount.toFixed(2)),
-      finalTotal: parseFloat(finalTotal.toFixed(2))
+      goodsTotal: Number(goodsTotal.toFixed(2)),
+      discount: Number(discount.toFixed(2)),
+      finalTotal: Number(finalTotal.toFixed(2))
     });
   },
 
   selectAddress() {
-    wx.navigateTo({
-      url: '/pages/addresses/addresses?from=checkout'
+    wx.navigateTo({ url: '/pages/addresses/addresses?from=checkout' });
+  },
+
+  onRemarkInput(e) {
+    this.setData({ remark: e.detail.value });
+  },
+
+  onDeliveryStatusChange(e) {
+    this.setData({ deliveryStatus: Number(e.detail.value) });
+  },
+
+  onDeliveryDateChange(e) {
+    this.setData({ deliveryDate: e.detail.value });
+  },
+
+  onDeliveryTimeChange(e) {
+    this.setData({ deliveryTime: e.detail.value });
+  },
+
+  onTablewareStatusChange(e) {
+    const tablewareStatus = Number(e.detail.value);
+    this.setData({
+      tablewareStatus,
+      // 切换到自选数量时默认提供 1 份，减号不能将数量减到 0
+      tablewareNumber: tablewareStatus === 0 && !this.data.tablewareNumber ? '1' : this.data.tablewareNumber
     });
   },
 
-  // 提交并支付订单
-  submitOrder() {
+  onTablewareNumberInput(e) {
+    this.setData({ tablewareNumber: e.detail.value });
+  },
+
+  changeTablewareNumber(e) {
+    const delta = Number(e.currentTarget.dataset.delta);
+    const currentNumber = Number(this.data.tablewareNumber);
+    const tablewareNumber = Number.isInteger(currentNumber) && currentNumber > 0
+      ? Math.max(1, currentNumber + delta)
+      : 1;
+    this.setData({ tablewareNumber: String(tablewareNumber) });
+  },
+
+  buildSubmitData() {
+    const {
+      address,
+      remark,
+      payMethod,
+      deliveryStatus,
+      deliveryDate,
+      deliveryTime,
+      tablewareStatus,
+      tablewareNumber
+    } = this.data;
+
+    if (deliveryStatus === 0 && (!deliveryDate || !deliveryTime)) {
+      wx.showToast({ title: '请选择预约配送时间', icon: 'none' });
+      return null;
+    }
+
+    const tablewareCount = Number(tablewareNumber);
+    if (tablewareStatus === 0 && (!Number.isInteger(tablewareCount) || tablewareCount < 1)) {
+      wx.showToast({ title: '请输入餐具数量', icon: 'none' });
+      return null;
+    }
+
+    return {
+      addressBookId: address.id,
+      remark: remark.trim(),
+      payMethod,
+      deliveryStatus,
+      // 后端 LocalDateTime 使用 yyyy-MM-dd HH:mm:ss 格式
+      deliveryTime: deliveryStatus === 0 ? `${deliveryDate} ${deliveryTime}:00` : null,
+      tablewareStatus,
+      tablewareNumber: tablewareStatus === 0 ? tablewareCount : null
+    };
+  },
+
+  async submitOrder() {
     if (!this.data.address) {
-      wx.showToast({
-        title: '请选择收货地址',
-        icon: 'none'
-      });
+      wx.showToast({ title: '请选择收货地址', icon: 'none' });
       return;
     }
 
-    wx.showLoading({
-      title: '正在创建支付...'
-    });
+    const submitData = this.buildSubmitData();
+    if (!submitData) {
+      return;
+    }
 
-    // 模拟 1.2 秒支付网络耗时
-    setTimeout(async () => {
-      wx.hideLoading();
-
-      // 1. 创建订单数据对象
-      const now = new Date();
-      const timeStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-      
-      const newOrderId = 'YW' + Math.floor(Math.random() * 900000000 + 100000000);
-      
-      // 深度拷贝购物车内容加入订单
-      const orderItems = this.data.cart.map(item => ({
-        id: item.id,
-        name: item.name,
-        price: item.price,
-        qty: item.qty,
-        specs: item.specs,
-        image: item.image
-      }));
-
-      const newOrder = {
-        id: newOrderId,
-        time: timeStr,
-        status: '待接单',
-        total: this.data.finalTotal,
-        items: orderItems
-      };
-
-      // 2. 将新订单存入全局列表的顶端 (最先展示)
-      app.globalData.orders.unshift(newOrder);
-
-      // 3. 后端清空成功后，才能跳转到支付成功页
-      await app.clearCart();
-
-      // 4. 重定向去成功支付页面 (避免用户按返回键重复提交)
-      wx.redirectTo({
-        url: `/pages/paySuccess/paySuccess?id=${newOrderId}&amount=${this.data.finalTotal}`
+    wx.showLoading({ title: '正在提交订单', mask: true });
+    try {
+      const orderSubmitVO = await request({
+        url: '/user/order/submit',
+        method: 'POST',
+        data: submitData
       });
-    }, 1200);
+
+      // 当前未接入真实微信商户支付，这里调用本地模拟支付接口更新订单状态
+      await request({
+        url: '/user/order/mock-payment',
+        method: 'PUT',
+        data: { orderNumber: orderSubmitVO.orderNumber }
+      });
+
+      // 后端事务已清空购物车；请求成功后再同步本地购物车，避免本地仍显示旧商品
+      app.globalData.cart = [];
+      wx.setStorageSync('cart', []);
+      app.triggerCartCallbacks();
+
+      wx.redirectTo({
+        url: `/pages/paySuccess/paySuccess?id=${orderSubmitVO.id}&amount=${orderSubmitVO.orderAmount}`
+      });
+    } catch (error) {
+      console.error('提交订单失败：', error);
+      wx.showToast({ title: error.message || '提交订单失败，请重试', icon: 'none' });
+    } finally {
+      wx.hideLoading();
+    }
   },
 
   goBack() {

@@ -291,17 +291,6 @@ App({
     
     // 地址数据由地址簿接口加载
     addresses: [],
-    currentAddress: null,
-    
-    // 默认历史订单
-    orders: [
-      { id: 'YW123456789', time: '2026-07-20 12:30', status: '已完成', total: 37.9, items: [
-        { id: 101, name: '招牌黄焖鸡米饭', price: 22.9, qty: 1, specs: { size: '大份', spice: '微辣' } },
-        { id: 105, name: '手打渣男柠檬茶', price: 15.0, qty: 1, specs: { size: '标准', spice: '少冰' } }
-      ]},
-      { id: 'YW987654321', time: '2026-07-15 18:15', status: '已完成', total: 35.0, items: [
-        { id: 102, name: '金汤酸菜鱼', price: 35.0, qty: 1, specs: null }
-      ]}
-    ]
+    currentAddress: null
   }
 })

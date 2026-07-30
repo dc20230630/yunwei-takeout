@@ -1,6 +1,6 @@
 // pages/login/login.js
 const app = getApp();
-const { request } = require('../../utils/request');
+const { request, upload } = require('../../utils/request');
 
 Page({
   data: {
@@ -12,7 +12,10 @@ Page({
     code: '',
     agree: true,
     countdown: 0,
-    wechatLoading: false
+    wechatLoading: false,
+    profileVisible: false,
+    nickname: '',
+    avatarUrl: ''
   },
 
   timer: null,
@@ -178,28 +181,20 @@ Page({
 
       const userInfo = {
         id: userLoginVO.id,
-        openid: userLoginVO.openid
+        openid: userLoginVO.openid,
+        nickname: userLoginVO.name,
+        avatarUrl: userLoginVO.avatar
       };
 
       // 全局数据供当前运行中的页面读取，本地缓存供下次启动时恢复
-      app.globalData.userInfo = userInfo;
-      wx.setStorageSync('userInfo', userInfo);
+      this.saveUserInfo(userInfo);
 
-      wx.showToast({
-        title: '微信登录成功',
-        icon: 'success'
+      this.setData({
+        profileVisible: true,
+        nickname: userLoginVO.name || '',
+        avatarUrl: userLoginVO.avatar || ''
       });
-
-      setTimeout(() => {
-        const pages = getCurrentPages();
-        if (pages.length > 1) {
-          wx.navigateBack();
-        } else {
-          wx.switchTab({
-            url: '/pages/home/home'
-          });
-        }
-      }, 1000);
+      return;
     } catch (error) {
       // 控制台保留错误详情，页面只提示用户可理解的信息
       console.error('微信登录失败：', error);
@@ -212,6 +207,78 @@ Page({
       wx.hideLoading();
       this.setData({ wechatLoading: false });
     }
+  },
+
+  saveUserInfo(userInfo) {
+    app.globalData.userInfo = userInfo;
+    wx.setStorageSync('userInfo', userInfo);
+  },
+
+  async chooseAvatar(e) {
+    const avatarUrl = e.detail.avatarUrl;
+    this.setData({ avatarUrl });
+
+    wx.showLoading({ title: '上传头像', mask: true });
+    try {
+      // 本地临时图片地址不能直接保存到数据库，先上传后保存 OSS 地址
+      const uploadedAvatarUrl = await upload({
+        url: '/user/user/avatar',
+        filePath: avatarUrl
+      });
+      this.setData({ avatarUrl: uploadedAvatarUrl });
+    } catch (error) {
+      console.error('头像上传失败：', error);
+      wx.showToast({ title: '头像上传失败，请重试', icon: 'none' });
+      this.setData({ avatarUrl: '' });
+    } finally {
+      wx.hideLoading();
+    }
+  },
+
+  onNicknameInput(e) {
+    this.setData({ nickname: e.detail.value.trim() });
+  },
+
+  async saveProfile() {
+    const { nickname, avatarUrl } = this.data;
+    if (!nickname) {
+      wx.showToast({ title: '请输入昵称', icon: 'none' });
+      return;
+    }
+    if (!avatarUrl) {
+      wx.showToast({ title: '请选择头像', icon: 'none' });
+      return;
+    }
+
+    wx.showLoading({ title: '保存资料', mask: true });
+    try {
+      await request({
+        url: '/user/user/profile',
+        method: 'POST',
+        data: { name: nickname, avatar: avatarUrl }
+      });
+      const userInfo = wx.getStorageSync('userInfo');
+      this.saveUserInfo({ ...userInfo, nickname, avatarUrl });
+      this.setData({ profileVisible: false });
+      this.finishWechatLogin();
+    } catch (error) {
+      console.error('保存用户资料失败：', error);
+      wx.showToast({ title: '保存资料失败，请重试', icon: 'none' });
+    } finally {
+      wx.hideLoading();
+    }
+  },
+
+  finishWechatLogin() {
+    wx.showToast({ title: '微信登录成功', icon: 'success' });
+    setTimeout(() => {
+      const pages = getCurrentPages();
+      if (pages.length > 1) {
+        wx.navigateBack();
+      } else {
+        wx.switchTab({ url: '/pages/home/home' });
+      }
+    }, 1000);
   },
 
   showUserAgreement() {

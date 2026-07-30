@@ -45,6 +45,28 @@ function request(options) {
   });
 }
 
+function upload(options) {
+  return new Promise((resolve, reject) => {
+    const token = wx.getStorageSync('token');
+    wx.uploadFile({
+      url: BASE_URL + options.url,
+      filePath: options.filePath,
+      name: 'file',
+      header: { authentication: token },
+      success(response) {
+        const result = JSON.parse(response.data);
+        if (result.code === 200) {
+          resolve(result.data);
+          return;
+        }
+        reject(new Error(result.message));
+      },
+      fail: reject
+    });
+  });
+}
+
 module.exports = {
-  request
+  request,
+  upload
 };

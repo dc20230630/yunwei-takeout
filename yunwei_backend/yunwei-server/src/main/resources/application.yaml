@@ -47,6 +47,9 @@ yunwei:
   wechat:
     app-id: ${WECHAT_APP_ID}
     app-secret: ${WECHAT_APP_SECRET}
+    pay:
+      # 没有商户号、证书和 APIv3 密钥时保持关闭，真实支付与回调接口不会注册
+      enabled: false
     # 微信支付功能开发时，再配置以下环境变量
     mch-id:
     mch-serial-no:
