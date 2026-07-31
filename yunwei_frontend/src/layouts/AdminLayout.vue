@@ -118,8 +118,8 @@
         <!-- 用户信息下拉菜单 -->
         <div class="flex items-center gap-4">
           <!-- 消息提醒 -->
-          <div class="relative cursor-pointer mr-2">
-            <el-badge :value="12" class="item">
+          <div class="relative cursor-pointer mr-2" @click="clearUnreadOrderCoutn">
+            <el-badge :value="unreadOrderCount" :hidden="unreadOrderCount === 0" class="item">
               <el-icon size="20" class="text-gray-600 hover:text-gray-800"><Bell /></el-icon>
             </el-badge>
           </div>
@@ -161,7 +161,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { ElNotification } from 'element-plus'
 import { useRoute, useRouter } from 'vue-router'
 import { useAppStore } from '@/store/app'
 import { useUserStore } from '@/store/user'
@@ -185,12 +186,95 @@ const route = useRoute()
 const router = useRouter()
 const appStore = useAppStore()
 const userStore = useUserStore()
+const unreadOrderCount = ref(0)
+let orderSocket: WebSocket | null = null
+const orderAudio = new Audio('/audio/New_Order.mp3')
+const urgeOrderAudio = new Audio('/audio/order-reminder.mp3')
+
+interface UrgeOrderMessage {
+  type: string
+  orderId: number
+  orderNumber: string
+  consignee: string
+  phone: string
+}
+
+const playOrderAudio = () => {
+  orderAudio.currentTime = 0
+  orderAudio.play().catch((error) => {
+    console.warn('来单提示音播放失败', error)
+  })
+}
+
+const playUrgeOrderAudio = () => {
+  urgeOrderAudio.currentTime = 0
+  urgeOrderAudio.play().catch((error) => {
+    console.warn('催单提示音播放失败', error)
+  })
+}
+
+
+const connectOrderSocket = () => {
+  // 本地开发时连接 Vite 的 /ws 代理；上线后自动使用当前域名，HTTPS 页面会使用 wss。
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+  const socketUrl = `${protocol}//${window.location.host}/ws/order`
+  orderSocket = new WebSocket(socketUrl)
+  orderSocket.onopen = () => {
+    console.log('来单提醒WebSocket已连接')
+  }
+  orderSocket.onmessage = (event) => {
+    if (event.data === 'NEW_ORDER') {
+      playOrderAudio()
+      unreadOrderCount.value += 1
+      ElNotification({
+        title: '新订单提醒',
+        message: '您有新的外卖订单，请及时处理',
+        type: 'success',
+        duration: 5000
+      })
+      return
+    }
+
+    if (!event.data.startsWith('{')) {
+      return
+    }
+
+    const urgeOrderMessage = JSON.parse(event.data) as UrgeOrderMessage
+    if (urgeOrderMessage.type === 'URGE_ORDER') {
+      playUrgeOrderAudio()
+      unreadOrderCount.value += 1
+      ElNotification({
+        title: '催单提醒',
+        message: `订单 ${urgeOrderMessage.orderNumber}（${urgeOrderMessage.consignee} ${urgeOrderMessage.phone}）正在催单`,
+        type: 'warning',
+        duration: 5000
+      })
+    }
+  }
+  orderSocket.onclose = () => {
+    console.log('来单提醒WebSocket已关闭')
+  }
+  orderSocket.onerror = () => {
+    console.error('来单提醒WebSocket连接异常')
+  }
+}
+
+const clearUnreadOrderCoutn = () => {
+  unreadOrderCount.value = 0
+}
 
 const loadShopStatus = async () => {
   appStore.setShopStatus(await getShopStatus())
 }
 
-onMounted(loadShopStatus)
+onMounted(() => {
+  loadShopStatus()
+  connectOrderSocket()
+})
+
+onBeforeUnmount(() => {
+  orderSocket?.close()
+})
 
 const currentRouteTitle = computed(() => {
   return route.meta?.title || '详情'

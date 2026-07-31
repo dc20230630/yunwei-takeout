@@ -18,6 +18,12 @@ export default defineConfig({
         target:'http://localhost:8080',//后端Spring Boot地址
         changeOrigin:true,//代理时修改请求来源
         rewrite:(path)=>path.replace(/^\/api/,''),//转发时去掉 /api
+      },
+      // 本地开发时将浏览器的 WebSocket 连接转发给 Spring Boot。
+      '/ws': {
+        target: 'ws://localhost:8080',
+        changeOrigin: true,
+        ws: true
       }
     }
   }

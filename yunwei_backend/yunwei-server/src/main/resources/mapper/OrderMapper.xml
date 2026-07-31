@@ -76,6 +76,45 @@
           and user_id = #{userId}
     </select>
 
+    <select id="listForAdmin" resultType="com.yunwei.pojo.entity.Orders">
+        select *
+        from orders
+        <where>
+            <if test="number != null and number != ''">
+                and number like concat('%', #{number}, '%')
+            </if>
+            <if test="phone != null and phone != ''">
+                and phone like concat('%', #{phone}, '%')
+            </if>
+            <if test="status != null">
+                and status = #{status}
+            </if>
+        </where>
+        order by order_time desc
+    </select>
+
+    <select id="getById" resultType="com.yunwei.pojo.entity.Orders">
+        select *
+        from orders
+        where id = #{id}
+    </select>
+
+    <update id="acceptOrder">
+        update orders
+        set status = 3
+        where id = #{id}
+          and status = 2
+    </update>
+
+    <update id="cancelOrder">
+        update orders
+        set status = 6,
+            cancel_time = #{cancelTime},
+            cancel_reason = '商家取消订单'
+        where id = #{id}
+          and status in (2, 3)
+    </update>
+
     <update id="updatePaymentStatus">
         update orders
         set status = #{status},

@@ -113,6 +113,24 @@ Page({
     }
   },
 
+  async urgeOrder(e) {
+    try {
+      await request({
+        url: `/user/order/${e.currentTarget.dataset.id}/urge`,
+        method: 'PUT'
+      });
+      wx.showToast({
+        title: '已提醒商家尽快接单',
+        icon: 'success'
+      });
+    } catch (error) {
+      wx.showToast({
+        title: error.message,
+        icon: 'none'
+      });
+    }
+  },
+
   async reorder(e) {
     const { items } = e.currentTarget.dataset.order;
     await app.clearCart();

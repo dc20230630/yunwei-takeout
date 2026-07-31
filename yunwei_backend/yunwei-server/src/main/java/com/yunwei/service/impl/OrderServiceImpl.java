@@ -1,6 +1,8 @@
 package com.yunwei.service.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yunwei.common.exception.BaseException;
 import com.yunwei.context.BaseContext;
 import com.yunwei.mapper.AddressBookMapper;
@@ -10,6 +12,7 @@ import com.yunwei.mapper.ShoppingCartMapper;
 import com.yunwei.mapper.UserMapper;
 import com.yunwei.pojo.dto.OrdersPaymentDTO;
 import com.yunwei.pojo.dto.OrdersSubmitDTO;
+import com.yunwei.pojo.dto.OrderAdminQueryDTO;
 import com.yunwei.pojo.entity.AddressBook;
 import com.yunwei.pojo.entity.OrderDetail;
 import com.yunwei.pojo.entity.Orders;
@@ -20,6 +23,7 @@ import com.yunwei.pojo.vo.OrderSubmitVO;
 import com.yunwei.pojo.vo.OrderVO;
 import com.yunwei.service.OrderService;
 import com.yunwei.utils.WeChatPayUtil;
+import com.yunwei.websocket.WebSocketServer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
@@ -31,6 +35,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 @Service
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
@@ -40,19 +45,21 @@ public class OrderServiceImpl implements OrderService {
     private final OrderDetailMapper orderDetailMapper;
     private final UserMapper userMapper;
     private final WeChatPayUtil weChatPayUtil;
+    private final WebSocketServer webSocketServer;
+    private final ObjectMapper objectMapper;
 
     @Override
     @Transactional
     public OrderSubmitVO submit(OrdersSubmitDTO ordersSubmitDTO) {
-        Long userId= BaseContext.getCurrentId();
+        Long userId = BaseContext.getCurrentId();
         //查询当前登录用户的购物车，不能使用前端传来的商品和价格
         List<ShoppingCart> shoppingCarts = shoppingCartMapper.list(userId);
-        if(shoppingCarts == null || shoppingCarts.isEmpty()){
+        if (shoppingCarts == null || shoppingCarts.isEmpty()) {
             throw new BaseException("购物车为空");
         }
         //地址必须属于当前登录用户
-        AddressBook addressBook = addressBookMapper.getByIdAndUserId(ordersSubmitDTO.getAddressBookId(),userId);
-        if(addressBook == null){
+        AddressBook addressBook = addressBookMapper.getByIdAndUserId(ordersSubmitDTO.getAddressBookId(), userId);
+        if (addressBook == null) {
             throw new BaseException("收货地址不存在");
         }
         // 订单金额必须由后端按购物车重新计算，不能使用前端传来的总价
@@ -72,7 +79,7 @@ public class OrderServiceImpl implements OrderService {
 
         BigDecimal amount = shoppingCarts.stream().map(item -> item.getAmount().multiply(BigDecimal.valueOf(item.getNumber()))).reduce(BigDecimal.ZERO, BigDecimal::add);
         Orders orders = new Orders();
-        BeanUtils.copyProperties(ordersSubmitDTO,orders);
+        BeanUtils.copyProperties(ordersSubmitDTO, orders);
         orders.setNumber(String.valueOf(System.currentTimeMillis()));
         orders.setStatus(1);
         orders.setUserId(userId);
@@ -87,7 +94,7 @@ public class OrderServiceImpl implements OrderService {
         orderMapper.insert(orders);
 
 
-        List<OrderDetail> orderDetails = shoppingCarts.stream().map(item->{
+        List<OrderDetail> orderDetails = shoppingCarts.stream().map(item -> {
             OrderDetail detail = new OrderDetail();
             detail.setName(item.getName());
             detail.setImage(item.getImage());
@@ -138,6 +145,9 @@ public class OrderServiceImpl implements OrderService {
         if (updatedRows == 0) {
             throw new BaseException("订单已支付");
         }
+        //只有订单状态确实从"待支付"更新为"待接单"后,才通知管理端
+        //这样重复支付请求不会产生重复来电提醒
+        webSocketServer.sendToAllClient("NEW_ORDER");
     }
 
     @Override
@@ -189,13 +199,25 @@ public class OrderServiceImpl implements OrderService {
         orders.setStatus(2); // 待接单
         orders.setPayStatus(1); // 已支付
         orders.setCheckoutTime(LocalDateTime.now());
-        orderMapper.updatePaymentStatus(orders);
+        int updateRows = orderMapper.updatePaymentStatus(orders);
+        if (updateRows == 1) {
+            //微信支付回调可能重复触发,只有首次更新成功才推送
+            webSocketServer.sendToAllClient("NEW_ORDER");
+        }
     }
 
     @Override
     public List<OrderVO> list() {
         Long userId = BaseContext.getCurrentId();
-        List<Orders> orders = orderMapper.listByUserId(userId);
+        return toOrderVOList(orderMapper.listByUserId(userId));
+    }
+
+    @Override
+    public List<OrderVO> listForAdmin(OrderAdminQueryDTO orderAdminQueryDTO) {
+        return toOrderVOList(orderMapper.listForAdmin(orderAdminQueryDTO));
+    }
+
+    private List<OrderVO> toOrderVOList(List<Orders> orders) {
         if (orders.isEmpty()) {
             return List.of();
         }
@@ -228,13 +250,66 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    public OrderVO getByIdForAdmin(Long id) {
+        Orders order = orderMapper.getById(id);
+        if (order == null) {
+            throw new BaseException("订单不存在");
+        }
+
+        List<OrderDetail> orderDetails = orderDetailMapper.listByOrderIds(List.of(id));
+        return toOrderVO(order, orderDetails);
+    }
+
+    @Override
+    public void acceptOrder(Long id) {
+        if (orderMapper.acceptOrder(id) == 0) {
+            throw new BaseException("订单当前状态不能接单");
+        }
+    }
+
+    @Override
+    public void cancelOrder(Long id) {
+        if (orderMapper.cancelOrder(id, LocalDateTime.now()) == 0) {
+            throw new BaseException("订单当前状态不能取消");
+        }
+    }
+
+    @Override
     public int cancelTimeOutOrder() {
         LocalDateTime now = LocalDateTime.now();
 
         //超过15分钟仍未支付的待付款订单自动取消
         LocalDateTime deadline = now.minusMinutes(15);
 
-        return orderMapper.cancelTimeoutOrders(deadline,now);
+        return orderMapper.cancelTimeoutOrders(deadline, now);
+    }
+
+    @Override
+    public void urgeOrder(Long id) {
+        Long userId = BaseContext.getCurrentId();
+        // 只能催当前登录用户自己的订单
+        Orders order = orderMapper.getByIdAndUserId(id, userId);
+        if (order == null) {
+            throw new BaseException("订单不存在");
+        }
+
+        // 只有待接单状态才能催商家
+        if (!Integer.valueOf(2).equals(order.getStatus())) {
+            throw new BaseException("当前订单不能催单");
+        }
+        // 催单不改变订单状态，只通知在线管理端，并带上订单信息供管理端定位。
+        Map<String, Object> reminder = new HashMap<>();
+        reminder.put("type", "URGE_ORDER");
+        reminder.put("orderId", order.getId());
+        reminder.put("orderNumber", order.getNumber());
+        reminder.put("consignee", order.getConsignee());
+        reminder.put("phone", order.getPhone());
+
+        try {
+            webSocketServer.sendToAllClient(objectMapper.writeValueAsString(reminder));
+        } catch (JsonProcessingException e) {
+            throw new BaseException("催单提醒发送失败");
+        }
     }
 
     private OrderVO toOrderVO(Orders order, List<OrderDetail> orderDetails) {

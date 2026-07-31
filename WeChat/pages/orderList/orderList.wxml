@@ -67,6 +67,14 @@
             >
               去支付
             </button>
+            <button
+              class="action-btn outline-small"
+              wx:if="{{item.status === '待接单'}}"
+              bindtap="urgeOrder"
+              data-id="{{item.id}}"
+            >
+              催单
+            </button>
           </view>
         </view>
       </view>

@@ -1,5 +1,6 @@
 package com.yunwei.service;
 
+import com.yunwei.pojo.dto.OrderAdminQueryDTO;
 import com.yunwei.pojo.dto.OrdersSubmitDTO;
 import com.yunwei.pojo.dto.OrdersPaymentDTO;
 import com.yunwei.pojo.vo.OrderPaymentVO;
@@ -22,10 +23,20 @@ public interface OrderService {
 
     OrderVO getById(Long id);
 
+    List<OrderVO> listForAdmin(OrderAdminQueryDTO orderAdminQueryDTO);
+
+    OrderVO getByIdForAdmin(Long id);
+
+    void acceptOrder(Long id);
+
+    void cancelOrder(Long id);
+
     /**
      * 取消超过支付时限且仍未支付的订单。
      *
      * @return 本次自动取消的订单数量
      */
     int cancelTimeOutOrder();
+
+    void urgeOrder(Long id);
 }

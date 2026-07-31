@@ -1,82 +1,69 @@
 <template>
   <div class="space-y-6">
-    <!-- 页面标题 -->
     <div>
       <h2 class="text-2xl font-bold text-gray-800">订单管理</h2>
       <p class="text-gray-400 text-sm mt-1">查看并处理门店订单</p>
     </div>
 
-    <!-- 过滤工具栏 -->
     <div class="bg-white p-5 rounded-lg shadow-sm border border-gray-100 flex flex-wrap gap-4 items-end">
       <div class="flex flex-col gap-2">
         <label class="text-xs font-medium text-gray-500">订单号</label>
-        <el-input v-model="filterForm.id" placeholder="请输入订单号" size="default" style="width: 200px;" clearable />
+        <el-input v-model="filterForm.number" placeholder="请输入订单号" style="width: 200px" clearable />
       </div>
       <div class="flex flex-col gap-2">
-        <label class="text-xs font-medium text-gray-500">用户手机号</label>
-        <el-input v-model="filterForm.phone" placeholder="请输入手机号" size="default" style="width: 180px;" clearable />
+        <label class="text-xs font-medium text-gray-500">收货人手机号</label>
+        <el-input v-model="filterForm.phone" placeholder="请输入手机号" style="width: 180px" clearable />
       </div>
       <div class="flex flex-col gap-2">
         <label class="text-xs font-medium text-gray-500">订单状态</label>
-        <el-select v-model="filterForm.status" placeholder="全部状态" size="default" style="width: 150px;" clearable>
-          <el-option label="待接单" value="pending" />
-          <el-option label="制作中" value="making" />
-          <el-option label="配送中" value="shipping" />
-          <el-option label="已完成" value="done" />
-          <el-option label="已取消" value="cancel" />
+        <el-select v-model="filterForm.status" placeholder="全部状态" style="width: 150px" clearable>
+          <el-option label="待支付" :value="1" />
+          <el-option label="待接单" :value="2" />
+          <el-option label="制作中" :value="3" />
+          <el-option label="配送中" :value="4" />
+          <el-option label="已完成" :value="5" />
+          <el-option label="已取消" :value="6" />
+          <el-option label="退款中" :value="7" />
         </el-select>
       </div>
       <div class="flex gap-2">
-        <el-button type="primary" @click="handleFilter">查询</el-button>
+        <el-button type="primary" @click="loadOrders">查询</el-button>
         <el-button @click="handleReset">重置</el-button>
       </div>
     </div>
 
-    <!-- 订单列表卡片 -->
     <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-5">
       <div class="flex justify-between items-center mb-4">
         <h3 class="font-bold text-gray-800">订单列表</h3>
-        <span class="text-xs text-gray-400">共 {{ filteredOrders.length }} 条</span>
+        <span class="text-xs text-gray-400">共 {{ orders.length }} 条</span>
       </div>
 
-      <el-table :data="filteredOrders" style="width: 100%" size="default">
-        <el-table-column prop="id" label="订单编号" width="160" />
-        <el-table-column prop="user" label="用户" width="120" />
+      <el-table v-loading="loading" :data="orders" style="width: 100%">
+        <el-table-column prop="number" label="订单编号" min-width="180" />
+        <el-table-column prop="consignee" label="收货人" width="120" />
         <el-table-column prop="phone" label="手机号" width="140" />
         <el-table-column label="金额" width="100">
-          <template #default="{ row }">
-            ¥{{ row.amount.toFixed(2) }}
-          </template>
+          <template #default="{ row }">¥{{ formatAmount(row.amount) }}</template>
         </el-table-column>
-        <el-table-column prop="pay" label="支付方式" width="110" />
+        <el-table-column label="支付方式" width="110">
+          <template #default="{ row }">{{ getPayMethodText(row.payMethod) }}</template>
+        </el-table-column>
         <el-table-column label="状态" width="110">
           <template #default="{ row }">
-            <el-tag :type="getStatusTagType(row.status)">
-              {{ getStatusText(row.status) }}
-            </el-tag>
+            <el-tag :type="getStatusTagType(row.status)">{{ getStatusText(row.status) }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="time" label="下单时间" width="170" />
+        <el-table-column label="下单时间" min-width="170">
+          <template #default="{ row }">{{ formatDateTime(row.orderTime) }}</template>
+        </el-table-column>
         <el-table-column label="操作" fixed="right" min-width="180">
           <template #default="{ row }">
             <div class="flex gap-2">
-              <el-button link type="primary" size="small" @click="viewDetail(row)">详情</el-button>
-              <el-button 
-                v-if="row.status === 'pending'" 
-                link 
-                type="success" 
-                size="small" 
-                @click="acceptOrder(row.id)"
-              >
+              <el-button link type="primary" size="small" @click="viewDetail(row.id)">详情</el-button>
+              <el-button v-if="row.status === 2" link type="success" size="small" @click="acceptOrder(row.id)">
                 接单
               </el-button>
-              <el-button 
-                v-if="['pending', 'making', 'shipping'].includes(row.status)" 
-                link 
-                type="danger" 
-                size="small" 
-                @click="cancelOrder(row.id)"
-              >
+              <el-button v-if="row.status === 2 || row.status === 3" link type="danger" size="small" @click="cancelOrder(row.id)">
                 取消
               </el-button>
             </div>
@@ -85,79 +72,50 @@
       </el-table>
     </div>
 
-    <!-- 订单详情抽屉 -->
-    <el-drawer
-      v-model="drawerVisible"
-      title="订单详情"
-      size="500px"
-      direction="rtl"
-      destroy-on-close
-    >
+    <el-drawer v-model="drawerVisible" title="订单详情" size="500px" destroy-on-close>
       <div v-if="selectedOrder" class="space-y-6 text-sm">
-        <!-- 基础信息 -->
         <div>
           <h4 class="font-bold text-gray-800 border-b border-gray-100 pb-2 mb-3">基本信息</h4>
           <div class="grid grid-cols-2 gap-y-3 gap-x-4">
-            <div><span class="text-gray-400 block mb-0.5">订单编号</span> <span class="text-gray-700 font-medium">{{ selectedOrder.id }}</span></div>
-            <div><span class="text-gray-400 block mb-0.5">订单状态</span> 
-              <el-tag :type="getStatusTagType(selectedOrder.status)" size="small">
-                {{ getStatusText(selectedOrder.status) }}
-              </el-tag>
+            <div><span class="text-gray-400 block mb-0.5">订单编号</span><span class="text-gray-700 font-medium">{{ selectedOrder.number }}</span></div>
+            <div>
+              <span class="text-gray-400 block mb-0.5">订单状态</span>
+              <el-tag :type="getStatusTagType(selectedOrder.status)" size="small">{{ getStatusText(selectedOrder.status) }}</el-tag>
             </div>
-            <div><span class="text-gray-400 block mb-0.5">下单时间</span> <span class="text-gray-700">{{ selectedOrder.time }}</span></div>
-            <div><span class="text-gray-400 block mb-0.5">支付方式</span> <span class="text-gray-700">{{ selectedOrder.pay }}</span></div>
-            <div><span class="text-gray-400 block mb-0.5">用户名</span> <span class="text-gray-700 font-medium">{{ selectedOrder.user }}</span></div>
-            <div><span class="text-gray-400 block mb-0.5">联系电话</span> <span class="text-gray-700">{{ selectedOrder.phone }}</span></div>
-            <div class="col-span-2"><span class="text-gray-400 block mb-0.5">配送方式</span> <span class="text-gray-700">{{ selectedOrder.delivery }}</span></div>
-            <div class="col-span-2"><span class="text-gray-400 block mb-0.5">收货地址</span> <span class="text-gray-700">{{ selectedOrder.address }}</span></div>
-            <div class="col-span-2"><span class="text-gray-400 block mb-0.5">订单备注</span> <span class="text-gray-700">{{ selectedOrder.note || '无' }}</span></div>
+            <div><span class="text-gray-400 block mb-0.5">下单时间</span><span class="text-gray-700">{{ formatDateTime(selectedOrder.orderTime) }}</span></div>
+            <div><span class="text-gray-400 block mb-0.5">支付方式</span><span class="text-gray-700">{{ getPayMethodText(selectedOrder.payMethod) }}</span></div>
+            <div><span class="text-gray-400 block mb-0.5">收货人</span><span class="text-gray-700 font-medium">{{ selectedOrder.consignee }}</span></div>
+            <div><span class="text-gray-400 block mb-0.5">联系电话</span><span class="text-gray-700">{{ selectedOrder.phone }}</span></div>
+            <div class="col-span-2"><span class="text-gray-400 block mb-0.5">配送方式</span><span class="text-gray-700">{{ getDeliveryText(selectedOrder) }}</span></div>
+            <div class="col-span-2"><span class="text-gray-400 block mb-0.5">收货地址</span><span class="text-gray-700">{{ selectedOrder.address }}</span></div>
+            <div v-if="selectedOrder.remark" class="col-span-2"><span class="text-gray-400 block mb-0.5">订单备注</span><span class="text-gray-700">{{ selectedOrder.remark }}</span></div>
+            <div v-if="selectedOrder.cancelReason" class="col-span-2"><span class="text-gray-400 block mb-0.5">取消原因</span><span class="text-gray-700">{{ selectedOrder.cancelReason }}</span></div>
           </div>
         </div>
 
-        <!-- 商品明细 -->
         <div>
           <h4 class="font-bold text-gray-800 border-b border-gray-100 pb-2 mb-3">商品明细</h4>
-          <el-table :data="selectedOrder.items" size="small" border style="width: 100%">
-            <el-table-column prop="0" label="商品" />
-            <el-table-column prop="1" label="规格" width="100" />
-            <el-table-column prop="2" label="数量" width="60" align="center">
-              <template #default="{ row }">
-                x{{ row[2] }}
-              </template>
+          <el-table :data="selectedOrder.orderDetails" size="small" border style="width: 100%">
+            <el-table-column prop="name" label="商品" />
+            <el-table-column label="规格" min-width="100">
+              <template #default="{ row }">{{ formatFlavor(row.dishFlavor) }}</template>
+            </el-table-column>
+            <el-table-column prop="number" label="数量" width="60" align="center">
+              <template #default="{ row }">×{{ row.number }}</template>
             </el-table-column>
             <el-table-column label="单价" width="80" align="right">
-              <template #default="{ row }">
-                ¥{{ row[3].toFixed(2) }}
-              </template>
+              <template #default="{ row }">¥{{ formatAmount(row.amount) }}</template>
             </el-table-column>
           </el-table>
         </div>
 
-        <!-- 结算明细 -->
-        <div class="bg-gray-50 rounded-lg p-4 space-y-2 border border-gray-100">
-          <div class="flex justify-between text-gray-600">
-            <span>商品小计</span>
-            <span>¥{{ getSubtotal(selectedOrder).toFixed(2) }}</span>
-          </div>
-          <div class="flex justify-between text-gray-600">
-            <span>配送费</span>
-            <span>¥{{ selectedOrder.fee.toFixed(2) }}</span>
-          </div>
-          <div class="flex justify-between text-gray-600">
-            <span>优惠</span>
-            <span class="text-red-500">- ¥{{ selectedOrder.discount.toFixed(2) }}</span>
-          </div>
-          <div class="flex justify-between font-bold text-base text-gray-800 pt-2 border-t border-gray-200">
-            <span>实付金额</span>
-            <span class="text-red-500">¥{{ selectedOrder.amount.toFixed(2) }}</span>
-          </div>
+        <div class="bg-gray-50 rounded-lg p-4 border border-gray-100 flex justify-between font-bold text-base text-gray-800">
+          <span>实付金额</span>
+          <span class="text-red-500">¥{{ formatAmount(selectedOrder.amount) }}</span>
         </div>
 
-        <!-- 抽屉脚部按钮 -->
         <div class="flex justify-end gap-2 pt-4">
-          <el-button v-if="selectedOrder.status === 'pending'" type="primary" @click="acceptOrder(selectedOrder.id)">
-            立即接单
-          </el-button>
+          <el-button v-if="selectedOrder.status === 2" type="primary" @click="acceptOrder(selectedOrder.id)">立即接单</el-button>
           <el-button @click="drawerVisible = false">关闭</el-button>
         </div>
       </div>
@@ -166,211 +124,126 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
-import { ElMessage, ElMessageBox } from 'element-plus';
+import { onMounted, reactive, ref } from 'vue'
+import { useRoute } from 'vue-router'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import {
+  acceptAdminOrder,
+  cancelAdminOrder,
+  getAdminOrderDetail,
+  getAdminOrderList,
+  type AdminOrder
+} from '@/api/order'
 
-const route = useRoute();
-
-// 模拟初始订单数据
-const orders = ref([
-  {
-    id: 'DD202405210001',
-    user: '张三',
-    phone: '13812345678',
-    amount: 45.60,
-    status: 'pending',
-    time: '2024-05-21 10:23:45',
-    delivery: '蜂鸟专送',
-    pay: '微信支付',
-    address: '北京市朝阳区望京 SOHO T2 1502',
-    note: '微辣，不要香菜',
-    items: [
-      ['招牌红烧肉套餐', '标准/微辣', 1, 38],
-      ['酸梅汤', '少冰', 1, 5]
-    ],
-    fee: 4,
-    discount: 1.4
-  },
-  {
-    id: 'DD202405210002',
-    user: '李四',
-    phone: '18698765432',
-    amount: 32.80,
-    status: 'making',
-    time: '2024-05-21 10:22:18',
-    delivery: '商家配送',
-    pay: '支付宝',
-    address: '北京市朝阳区金辉大厦 8 层',
-    note: '餐具 2 份',
-    items: [
-      ['老北京炸酱面', '加面', 1, 28]
-    ],
-    fee: 5,
-    discount: 0.2
-  },
-  {
-    id: 'DD202405210003',
-    user: '王五',
-    phone: '15544332211',
-    amount: 28.90,
-    status: 'shipping',
-    time: '2024-05-21 10:20:55',
-    delivery: '蜂鸟专送',
-    pay: '微信支付',
-    address: '北京市朝阳区望京花园 7-2-601',
-    note: '到门口电话联系',
-    items: [
-      ['麻婆豆腐盖饭', '中辣', 1, 25]
-    ],
-    fee: 4,
-    discount: 0.1
-  },
-  {
-    id: 'DD202405210004',
-    user: '赵六',
-    phone: '17788990011',
-    amount: 56.70,
-    status: 'done',
-    time: '2024-05-21 10:19:33',
-    delivery: '蜂鸟专送',
-    pay: '云闪付',
-    address: '北京市朝阳区融科望京 A 座',
-    note: '少油',
-    items: [
-      ['双拼商务套餐', '标准', 1, 52]
-    ],
-    fee: 5,
-    discount: 0.3
-  },
-  {
-    id: 'DD202405210005',
-    user: '孙七',
-    phone: '13955667788',
-    amount: 19.90,
-    status: 'done',
-    time: '2024-05-21 10:18:07',
-    delivery: '商家配送',
-    pay: '微信支付',
-    address: '北京市东城区东直门外大街 12 号',
-    note: '',
-    items: [
-      ['经典酸辣粉', '微辣', 1, 16]
-    ],
-    fee: 4,
-    discount: 0.1
-  }
-]);
-
-// 过滤表单
+const route = useRoute()
+const orders = ref<AdminOrder[]>([])
+const loading = ref(false)
+const drawerVisible = ref(false)
+const selectedOrder = ref<AdminOrder | null>(null)
 const filterForm = reactive({
-  id: '',
+  number: '',
   phone: '',
-  status: ''
-});
+  status: undefined as number | undefined
+})
 
-// 过滤结果
-const filteredOrders = computed(() => {
-  return orders.value.filter(o => {
-    const matchId = !filterForm.id || o.id.toLowerCase().includes(filterForm.id.trim().toLowerCase());
-    const matchPhone = !filterForm.phone || o.phone.includes(filterForm.phone.trim());
-    const matchStatus = !filterForm.status || o.status === filterForm.status;
-    return matchId && matchPhone && matchStatus;
-  });
-});
+const statusTextMap: Record<number, string> = {
+  1: '待支付',
+  2: '待接单',
+  3: '制作中',
+  4: '配送中',
+  5: '已完成',
+  6: '已取消',
+  7: '退款中'
+}
 
-// 抽屉管理
-const drawerVisible = ref(false);
-const selectedOrder = ref<any>(null);
+const statusTagTypeMap: Record<number, 'danger' | 'primary' | 'warning' | 'success' | 'info'> = {
+  1: 'info',
+  2: 'danger',
+  3: 'primary',
+  4: 'warning',
+  5: 'success',
+  6: 'info',
+  7: 'info'
+}
 
-const getStatusText = (status: string) => {
-  const map: Record<string, string> = {
-    pending: '待接单',
-    making: '制作中',
-    shipping: '配送中',
-    done: '已完成',
-    cancel: '已取消'
-  };
-  return map[status] || '未知';
-};
+const formatAmount = (amount: number) => amount.toFixed(2)
 
-const getStatusTagType = (status: string) => {
-  const map: Record<string, string> = {
-    pending: 'danger',
-    making: 'primary',
-    shipping: 'warning',
-    done: 'success',
-    cancel: 'info'
-  };
-  return map[status] || 'info';
-};
+const formatDateTime = (dateTime: string) => dateTime.replace('T', ' ').slice(0, 19)
 
-const getSubtotal = (order: any) => {
-  return order.items.reduce((sum: number, item: any) => sum + (item[2] * item[3]), 0);
-};
+const formatFlavor = (dishFlavor: string | null) => {
+  if (dishFlavor === null) {
+    return ''
+  }
+  return Object.values(JSON.parse(dishFlavor)).join(' / ')
+}
 
-const handleFilter = () => {
-  // 依靠 computed 自动更新
-};
+const getStatusText = (status: number) => statusTextMap[status]
+
+const getStatusTagType = (status: number) => statusTagTypeMap[status]
+
+const getPayMethodText = (payMethod: number) => payMethod === 1 ? '微信支付' : '支付宝支付'
+
+const getDeliveryText = (order: AdminOrder) => order.deliveryStatus === 1
+  ? '立即配送'
+  : `预约配送：${formatDateTime(order.deliveryTime as string)}`
+
+const loadOrders = async () => {
+  loading.value = true
+  try {
+    orders.value = await getAdminOrderList(filterForm)
+  } finally {
+    loading.value = false
+  }
+}
 
 const handleReset = () => {
-  filterForm.id = '';
-  filterForm.phone = '';
-  filterForm.status = '';
-};
+  filterForm.number = ''
+  filterForm.phone = ''
+  filterForm.status = undefined
+  loadOrders()
+}
 
-// 接单
-const acceptOrder = (id: string) => {
-  const order = orders.value.find(o => o.id === id);
-  if (order) {
-    order.status = 'making';
-    ElMessage.success('接单成功，已进入制作阶段！');
-    if (selectedOrder.value && selectedOrder.value.id === id) {
-      selectedOrder.value.status = 'making';
-    }
+const viewDetail = async (id: number) => {
+  selectedOrder.value = await getAdminOrderDetail(id)
+  drawerVisible.value = true
+}
+
+const refreshSelectedOrder = async () => {
+  if (selectedOrder.value) {
+    selectedOrder.value = await getAdminOrderDetail(selectedOrder.value.id)
   }
-};
+}
 
-// 取消订单
-const cancelOrder = (id: string) => {
-  ElMessageBox.confirm(
-    '确认要取消该订单吗？此操作不可逆。',
-    '提示',
-    {
+const acceptOrder = async (id: number) => {
+  await acceptAdminOrder(id)
+  ElMessage.success('接单成功，订单已进入制作中')
+  await loadOrders()
+  await refreshSelectedOrder()
+}
+
+const cancelOrder = async (id: number) => {
+  try {
+    await ElMessageBox.confirm('确认取消该订单吗？', '提示', {
       confirmButtonText: '确定取消',
       cancelButtonText: '暂不取消',
-      type: 'warning',
-    }
-  ).then(() => {
-    const order = orders.value.find(o => o.id === id);
-    if (order) {
-      order.status = 'cancel';
-      ElMessage.error('订单已被取消');
-      if (selectedOrder.value && selectedOrder.value.id === id) {
-        selectedOrder.value.status = 'cancel';
-      }
-    }
-  }).catch(() => {});
-};
-
-// 查看详情
-const viewDetail = (order: any) => {
-  selectedOrder.value = order;
-  drawerVisible.value = true;
-};
-
-// 页面加载时的行为
-onMounted(() => {
-  // 如果是从外面带 id 路由跳转来的，默认筛选出该订单并弹出详情
-  const queryId = route.query.id as string;
-  if (queryId) {
-    const matched = orders.value.find(o => o.id === queryId);
-    if (matched) {
-      viewDetail(matched);
-    }
+      type: 'warning'
+    })
+  } catch {
+    // 用户关闭确认框或点击“暂不取消”时，不发起取消订单请求。
+    return
   }
-});
-</script>
 
-<style scoped>
-</style>
+  await cancelAdminOrder(id)
+  ElMessage.success('订单已取消')
+  await loadOrders()
+  await refreshSelectedOrder()
+}
+
+onMounted(async () => {
+  await loadOrders()
+  const orderId = Number(route.query.id)
+  if (orderId) {
+    await viewDetail(orderId)
+  }
+})
+</script>

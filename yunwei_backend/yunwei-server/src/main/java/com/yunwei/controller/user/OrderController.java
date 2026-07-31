@@ -52,4 +52,11 @@ public class OrderController {
     public Result<OrderVO> getById(@PathVariable Long id) {
         return Result.success(orderService.getById(id));
     }
+
+
+    @PutMapping("/{id}/urge")
+    public Result<Void> UrgeOrder(@PathVariable("id") Long id){
+        orderService.urgeOrder(id);
+        return Result.success();
+    }
 }

@@ -1,5 +1,6 @@
 package com.yunwei.mapper;
 
+import com.yunwei.pojo.dto.OrderAdminQueryDTO;
 import com.yunwei.pojo.entity.Orders;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -18,6 +19,14 @@ public interface OrderMapper {
     List<Orders> listByUserId(Long userId);
 
     Orders getByIdAndUserId(@Param("id") Long id, @Param("userId") Long userId);
+
+    List<Orders> listForAdmin(OrderAdminQueryDTO orderAdminQueryDTO);
+
+    Orders getById(Long id);
+
+    int acceptOrder(Long id);
+
+    int cancelOrder(@Param("id") Long id, @Param("cancelTime") LocalDateTime cancelTime);
 
     int updatePaymentStatus(Orders orders);
 
